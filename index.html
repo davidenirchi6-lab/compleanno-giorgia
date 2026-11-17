@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="it">
 <head>
@@ -26,10 +27,7 @@
 
 *{box-sizing:inherit;margin:0}
 
-html{
-  height:100%;
-  scroll-padding-top:env(safe-area-inset-top,0px);
-}
+html{height:100%}
 
 body{
   height:100%;
@@ -140,12 +138,7 @@ canvas#heart.dim{
   will-change:transform;
 }
 
-#cur svg{
-  width:100%;
-  height:100%;
-  transition:transform .12s;
-}
-
+#cur svg{width:100%;height:100%;transition:transform .12s}
 #cur.press svg{transform:scale(.8)}
 
 .rip{
@@ -261,7 +254,7 @@ canvas#heart.dim{
   max-width:460px;
   max-height:calc(100% - 20px);
   overflow-y:auto;
-  font:500 clamp(20px,2.5vw,27px)/1.5 Caveat,"Segoe Script",cursive;
+  font:500 clamp(20px,2.5vw,27px)/1.5 Caveat,cursive;
   color:var(--ink);
   scrollbar-width:none;
   padding:6px 2px;
@@ -283,9 +276,7 @@ canvas#heart.dim{
   animation:wi .5s ease forwards;
 }
 
-@keyframes wi{
-  to{opacity:1;transform:none}
-}
+@keyframes wi{to{opacity:1;transform:none}}
 
 #replay{
   position:absolute;
@@ -305,7 +296,9 @@ canvas#heart.dim{
 #replay.show{opacity:1}
 input[type=file]{display:none}
 
-@media (max-width:720px){
+/* MOBILE */
+
+@media(max-width:720px){
   #stage{
     flex-direction:column;
     gap:38px;
@@ -325,81 +318,182 @@ input[type=file]{display:none}
   }
 }
 
-@media (prefers-reduced-motion:reduce){
+@media(prefers-reduced-motion:reduce){
   .ph,#stage,canvas#heart{transition-duration:.01s}
 }
 </style>
 </head>
 
 <body>
+
 <div id="app">
 
-  <canvas id="heart" aria-hidden="true"></canvas>
+<canvas id="heart" aria-hidden="true"></canvas>
 
-  <div id="intro">
-    <div class="ln sys" id="l1"></div>
-    <div class="ln" id="l2"></div>
-    <div class="ln ask" id="l3"></div>
+<div id="intro">
+  <div class="ln sys" id="l1"></div>
+  <div class="ln" id="l2"></div>
+  <div class="ln ask" id="l3"></div>
+  <button id="btn" type="button">🔒 DECIFRA IL MESSAGGIO</button>
+  <button id="addph" type="button">+ carica le tue foto</button>
+  <input type="file" id="file" accept="image/*" multiple>
+</div>
 
-    <button id="btn" type="button">🔒 DECIFRA IL MESSAGGIO</button>
+<div id="cur">
+  <svg viewBox="0 0 24 24">
+    <path d="M3 2l7 19 3-8 8-3z" fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/>
+  </svg>
+</div>
 
-    <button id="addph" type="button">+ carica le tue foto</button>
-    <input type="file" id="file" accept="image/*" multiple>
-  </div>
+<div id="stage">
+  <div id="photos"><div id="dots"></div></div>
+  <div id="letter" aria-live="polite"></div>
+</div>
 
-  <div id="cur">
-    <svg viewBox="0 0 24 24">
-      <path d="M3 2l7 19 3-8 8-3z" fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/>
-    </svg>
-  </div>
+<button id="replay" type="button">↺ rivedi</button>
 
-  <div id="stage">
-    <div id="photos">
-      <div id="dots"></div>
-    </div>
-    <div id="letter" aria-live="polite"></div>
-  </div>
-
-  <button id="replay" type="button">↺ rivedi</button>
 </div>
 
 <script>
 
-/* ================== PERSONALIZZA QUI ================== */
+/* ================= PERSONALIZZA QUI ================= */
 
 const CONFIG = {
-  nome: "amore",
-  firma: "Il tuo [Nome]",
 
+  nome: "Giorgia",
+  firma: "Per sempre tuo, [Nome]",
+
+  // Ogni frase è diversa: nessuna viene ripetuta.
   lingue: [
-    "ti amo","I love you","te quiero","je t’aime",
-    "ich liebe dich","eu te amo","ik hou van je",
-    "jag älskar dig","jeg elsker deg","jeg elsker dig",
-    "minä rakastan sinua","ég elska þig","kocham cię",
-    "miluji tě","ľúbim ťa","szeretlek","te iubesc",
-    "обичам те","volim te","ljubim te","σ’ αγαπώ",
-    "я тебя люблю","я тебе кохаю","aš tave myliu",
-    "es tevi mīlu","ma armastan sind","të dua",
-    "те сакам","seni seviyorum","أحبك","אני אוהב אותך",
-    "دوستت دارم","مجھے تم سے پیار ہے",
-    "मैं तुमसे प्यार करता हूँ","আমি তোমাকে ভালোবাসি",
+    "ti amo",
+    "I love you",
+    "te quiero",
+    "je t’aime",
+    "ich liebe dich",
+    "eu te amo",
+    "ik hou van je",
+    "jag älskar dig",
+    "jeg elsker deg",
+    "minä rakastan sinua",
+    "ég elska þig",
+    "kocham cię",
+    "miluji tě",
+    "ľúbim ťa",
+    "szeretlek",
+    "te iubesc",
+    "обичам те",
+    "volim te",
+    "ljubim te",
+    "σ’ αγαπώ",
+    "я тебя люблю",
+    "я тебе кохаю",
+    "aš tave myliu",
+    "es tevi mīlu",
+    "ma armastan sind",
+    "të dua",
+    "те сакам",
+    "seni seviyorum",
+    "أحبك",
+    "אני אוהב אותך",
+    "دوستت دارم",
+    "مجھے تم سے پیار ہے",
+    "मैं तुमसे प्यार करता हूँ",
+    "আমি তোমাকে ভালোবাসি",
     "நான் உன்னை காதலிக்கிறேன்",
-    "నేను నిన్ను ప్రేమిస్తున్నాను","我爱你","愛してる",
-    "사랑해","ฉันรักเธอ","anh yêu em","aku cinta kamu",
-    "saya cintakan awak","mahal kita","მიყვარხარ",
-    "ես քեզ սիրում եմ","мен сені жақсы көремін",
-    "би чамд хайртай","म तिमीलाई माया गर्छु",
-    "nakupenda","ngiyakuthanda","ek is lief vir jou",
-    "mo nifẹ rẹ","ina son ka","እወድሃለሁ",
-    "aloha au iā ʻoe","kei te aroha au ki a koe",
-    "mi amas vin","t’estimo","maite zaitut",
-    "quérote","tá grá agam duit","rwy’n dy garu di",
-    "inħobbok","ech hunn dech gär","ikh hob dikh lib",
-    "gihigugma tika","ខ្ញុំស្រលាញ់អ្នក",
-    "ຂ້ອຍຮັກເຈົ້າ","මම ඔබට ආදරෙයි",
-    "ez te hez dikim","səni sevirəm","seni sevaman",
-    "waan ku jeclahay","tiako ianao","munakuyki",
-    "rohayhu","mwen renmen w","te amo"
+    "我爱你",
+    "愛してる",
+    "사랑해",
+    "ฉันรักเธอ",
+    "anh yêu em",
+    "aku cinta kamu",
+    "saya cintakan awak",
+    "მიყვარხარ",
+    "ես քեզ սիրում եմ",
+    "мен сені жақсы көремін",
+    "би чамд хайртай",
+    "म तिमीलाई माया गर्छु",
+    "nakupenda",
+    "ngiyakuthanda",
+    "ek is lief vir jou",
+    "mo nifẹ rẹ",
+    "እወድሃለሁ",
+    "aloha au iā ʻoe",
+    "kei te aroha au ki a koe",
+    "mi amas vin",
+    "t’estimo",
+    "maite zaitut",
+    "quérote",
+    "tá grá agam duit",
+    "rwy’n dy garu di",
+    "inħobbok",
+    "ech hunn dech gär",
+    "gihigugma tika",
+    "ខ្ញុំស្រលាញ់អ្នក",
+    "ຂ້ອຍຮັກເຈົ້າ",
+    "මම ඔබට ආදරෙයි",
+    "ez te hez dikim",
+    "səni sevirəm",
+    "seni sevaman",
+    "waan ku jeclahay",
+    "tiako ianao",
+    "munakuyki",
+    "rohayhu",
+    "mwen renmen w",
+    "te dua din suflet",
+    "you are my everything",
+    "forever yours",
+    "my heart is yours",
+    "you are my sunshine",
+    "always and forever",
+    "only you",
+    "my one and only",
+    "you make me happy",
+    "you are my home",
+    "my favorite person",
+    "you are my dream",
+    "my sweetest love",
+    "I choose you",
+    "you complete me",
+    "my beautiful girl",
+    "my whole world",
+    "you are special",
+    "my heart beats for you",
+    "I adore you",
+    "you are my happiness",
+    "my endless love",
+    "you are my forever",
+    "my little universe",
+    "you mean everything",
+    "I need only you",
+    "you are my miracle",
+    "my sweetest thought",
+    "you are my star",
+    "I am yours",
+    "my greatest gift",
+    "my reason to smile",
+    "you are my light",
+    "my favorite hello",
+    "my last goodnight",
+    "I fall for you",
+    "you are incredible",
+    "my precious love",
+    "you are my destiny",
+    "my safe place",
+    "you are beautiful",
+    "I cherish you",
+    "my perfect person",
+    "you are my angel",
+    "my heart belongs to you",
+    "my sweetest dream",
+    "you are everything",
+    "I love your smile",
+    "I love your soul",
+    "you are my peace",
+    "my favorite story",
+    "you are my blessing",
+    "I will choose you",
+    "my forever person",
+    "you make life beautiful"
   ],
 
   foto: [],
@@ -422,14 +516,9 @@ const sleep = ms => new Promise(r => setTimeout(r,ms));
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let state = 'intro';
-let W,H,DPR;
-let items = [];
-let startT = 0;
-let fillDone = false;
-let heartCx,heartCy,R,fs_;
-let raf;
+let timers = [];
 
-/* ---------- INTRO ---------- */
+/* INTRO */
 
 async function typeInto(el,text,speed=28){
   el.classList.add('caret');
@@ -464,60 +553,31 @@ async function intro(){
   );
 
   await sleep(300);
+
   $('#btn').classList.add('show');
 }
 
-/* ---------- CUORE DI TESTO ---------- */
+/* CUORE PIENO DI SCRITTE */
 
 const cv = $('#heart');
 const ctx = cv.getContext('2d');
 
-/*
-  Questa funzione crea il contorno matematico del cuore.
-  R è stato aumentato per rendere il cuore molto più grande.
-*/
+let W,H,DPR;
+let items = [];
+let startT = 0;
+let fillDone = false;
+let heartCx,heartCy,R,fs_;
+let raf;
 
-function heartPoint(t){
-  const x = 16*Math.pow(Math.sin(t),3);
+/* Equazione matematica del cuore */
 
-  const y =
-    13*Math.cos(t)
-    - 5*Math.cos(2*t)
-    - 2*Math.cos(3*t)
-    - Math.cos(4*t);
-
-  const k = R/16;
-
-  return {
-    x:heartCx + x*k,
-    y:heartCy - (y+2.5)*k
-  };
+function insideHeart(x,y){
+  const a = x*x + y*y - 1;
+  return a*a*a - x*x*y*y*y <= 0;
 }
-
-/* Controlla se un punto si trova dentro il cuore */
-
-function insidePoly(px,py,poly){
-  let c = false;
-
-  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
-    const a = poly[i];
-    const b = poly[j];
-
-    if(
-      (a.y>py)!==(b.y>py) &&
-      px < (b.x-a.x)*(py-a.y)/(b.y-a.y)+a.x
-    ){
-      c=!c;
-    }
-  }
-
-  return c;
-}
-
-/* Mescola le lingue */
 
 function shuffle(a){
-  const b=[...a];
+  const b = [...a];
 
   for(let i=b.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -526,18 +586,6 @@ function shuffle(a){
 
   return b;
 }
-
-/*
-  NUOVO SISTEMA DI RIEMPIMENTO
-
-  Invece di mettere le parole in posizioni casuali,
-  il cuore viene riempito con righe orizzontali.
-
-  Ogni riga è centrata e le parole sono distribuite
-  con spazi regolari.
-
-  Il risultato è più pieno, ordinato e leggibile.
-*/
 
 function buildHeart(){
 
@@ -551,243 +599,184 @@ function buildHeart(){
 
   ctx.setTransform(DPR,0,0,DPR,0,0);
 
+  /*
+    Cuore grande:
+    su telefono lascia un margine laterale,
+    su desktop occupa quasi tutta l'altezza.
+  */
+
+  R = Math.min(W*0.46,H*0.43);
+
   heartCx = W/2;
   heartCy = H/2;
 
-  /*
-    Cuore più grande:
-    su desktop sfrutta quasi tutta la larghezza,
-    su telefono mantiene un'altezza adeguata.
-  */
-
-  R = Math.min(W*0.47,H*0.43);
-
-  /*
-    Testo leggermente più piccolo:
-    così entrano molte più scritte.
-  */
-
-  fs_ = Math.max(8,Math.min(15,R/23));
+  fs_ = Math.max(8,Math.min(12,R/27));
 
   ctx.font = `700 ${fs_}px "JetBrains Mono", monospace`;
 
-  const names = shuffle(CONFIG.lingue);
-  let li = 0;
+  // Ogni espressione viene consumata una volta sola.
+  const phrases = shuffle(CONFIG.lingue);
 
-  function next(){
-    const word = names[li % names.length];
-    li++;
-    return word;
-  }
+  let phraseIndex = 0;
+  items = [];
 
-  /* Creo il poligono del cuore */
+  const rowHeight = fs_*1.45;
+  const step = 0.0025;
 
-  const N = 1200;
-  const pts = [];
-
-  for(let i=0;i<=N;i++){
-    pts.push(heartPoint(i/N*Math.PI*2));
-  }
-
-  items=[];
+  let rowIndex = 0;
 
   /*
-    Altezza di ogni riga.
-    Più è piccolo il valore, più righe e scritte entrano.
+    Il cuore viene riempito con righe orizzontali.
+    Le estremità di ogni riga seguono la formula
+    matematica della sagoma.
   */
 
-  const rowHeight = fs_*1.48;
+  for(let py=-0.98;py<=0.98;py+=rowHeight/R){
 
-  /*
-    Parto dall'alto e scendo progressivamente.
-    Ogni riga viene riempita solo dove c'è il cuore.
-  */
+    let intervals=[];
+    let start=null;
 
-  let row = 0;
+    for(let px=-1.1;px<=1.1;px+=step){
 
-  for(
-    let y=heartCy-R*1.03;
-    y<=heartCy+R*1.03;
-    y+=rowHeight
-  ){
+      const inside=insideHeart(px,py);
 
-    /*
-      Trovo il margine sinistro e destro della riga.
-      Il campionamento serve a seguire precisamente
-      la forma del cuore.
-    */
+      if(inside && start===null){
+        start=px;
+      }
 
-    let left=null;
-    let right=null;
+      if((!inside || px>=1.1) && start!==null){
 
-    const step=2;
+        intervals.push({
+          left:start*R,
+          right:px*R
+        });
 
-    for(let x=heartCx-R*1.08;x<=heartCx+R*1.08;x+=step){
-
-      if(insidePoly(x,y,pts)){
-        if(left===null) left=x;
-        right=x;
+        start=null;
       }
     }
 
-    if(left===null || right===null) continue;
+    for(const interval of intervals){
 
-    /*
-      Margine interno per non far toccare le parole
-      al bordo del cuore.
-    */
+      const width=interval.right-interval.left;
+      const gap=fs_*0.8;
 
-    const margin=fs_*0.9;
+      let row=[];
+      let totalWidth=0;
 
-    left+=margin;
-    right-=margin;
+      /*
+        Cerca le frasi successive senza riutilizzarle.
+        Se una frase non entra, passa alla successiva
+        soltanto quando questa non può essere inserita
+        in quella riga.
+      */
 
-    const available=right-left;
+      while(phraseIndex<phrases.length){
 
-    if(available<fs_*3) continue;
+        const phrase=phrases[phraseIndex];
+        const phraseWidth=ctx.measureText(phrase).width;
 
-    /*
-      Preparo le parole della riga.
-      Le parole vengono ripetute quando necessario,
-      così il cuore risulta molto più pieno.
-    */
+        const needed=row.length===0
+          ? phraseWidth
+          : phraseWidth+gap;
 
-    const words=[];
-    let totalWidth=0;
+        if(totalWidth+needed>width){
+          break;
+        }
 
-    while(totalWidth<available){
+        row.push({
+          text:phrase,
+          width:phraseWidth
+        });
 
-      const word=next();
-      const width=ctx.measureText(word).width;
-      const gap=fs_*0.85;
+        totalWidth+=needed;
+        phraseIndex++;
+      }
 
-      words.push({
-        text:word,
-        width:width,
-        gap:gap
+      let x=heartCx+interval.left+(width-totalWidth)/2;
+
+      row.forEach((word,colIndex)=>{
+
+        items.push({
+          x:x+word.width/2,
+          y:heartCy-py*R,
+          text:word.text,
+
+          // Le righe appaiono dall'alto verso il basso.
+          d:350+rowIndex*95+colIndex*25,
+
+          phase:Math.random()*Math.PI*2,
+          size:fs_*(0.95+Math.random()*0.08)
+        });
+
+        x+=word.width+gap;
       });
-
-      totalWidth+=width+gap;
     }
 
-    /*
-      Calcolo la larghezza esatta e centro la riga.
-      Tutte le righe restano orizzontali e regolari.
-    */
+    rowIndex++;
 
-    const excess=totalWidth-available;
-    let x=left-excess/2;
-
-    const rowDelay=row*95;
-
-    for(const word of words){
-
-      const center=x+word.width/2;
-
-      items.push({
-        x:center,
-        y:y,
-        t:word.text,
-        d:350+rowDelay,
-        ph:Math.random()*6.28,
-        row:row
-      });
-
-      x+=word.width+word.gap;
-    }
-
-    row++;
+    if(phraseIndex>=phrases.length) break;
   }
-
-  /*
-    Le righe vengono mostrate dall'alto verso il basso.
-    Il cuore si costruisce in modo lineare.
-  */
 }
-
-/* ---------- ANIMAZIONE DEL CUORE ---------- */
 
 function draw(t){
 
   raf=requestAnimationFrame(draw);
 
-  const el=t-startT;
+  const elapsed=t-startT;
 
   ctx.clearRect(0,0,W,H);
 
-  /*
-    Battito leggero e naturale.
-  */
-
+  // Battito del cuore
   const beat=
-    1
-    +0.018*Math.sin(el/210)
-    +0.009*Math.sin(el/105);
+    1+
+    0.018*Math.sin(elapsed/210)+
+    0.008*Math.sin(elapsed/105);
 
   ctx.textAlign='center';
   ctx.textBaseline='middle';
 
   let done=0;
-  let maxD=0;
+  let maxDelay=0;
 
-  for(const i of items){
+  for(const item of items){
 
-    if(i.d>maxD) maxD=i.d;
+    maxDelay=Math.max(maxDelay,item.d);
 
-    const age=el-i.d;
+    const age=elapsed-item.d;
 
     if(age<0) continue;
 
     done++;
 
-    const a=Math.min(1,age/450);
+    const opacity=Math.min(1,age/650);
 
-    const tw=0.75+0.25*Math.sin(el/550+i.ph);
+    const glow=
+      0.75+0.25*Math.sin(elapsed/500+item.phase);
 
-    const x=heartCx+(i.x-heartCx)*beat;
-    const y=heartCy+(i.y-heartCy)*beat;
+    const x=heartCx+(item.x-heartCx)*beat;
+    const y=heartCy+(item.y-heartCy)*beat;
 
     ctx.save();
 
-    ctx.translate(x,y);
+    ctx.globalAlpha=opacity*glow;
 
-    /*
-      Piccolo effetto di comparsa.
-    */
+    ctx.fillStyle='#ff315d';
 
-    const scale=0.92+(1-a)*0.08;
-    ctx.scale(scale,scale);
+    ctx.shadowColor='rgba(255,35,85,0.85)';
+    ctx.shadowBlur=7;
 
-    ctx.globalAlpha=a*(0.78+0.22*tw);
+    ctx.font=`700 ${item.size}px "JetBrains Mono", monospace`;
 
-    /*
-      Colore rosa luminoso.
-      Alterno due tonalità per dare profondità.
-    */
-
-    ctx.fillStyle =
-      i.row%3===0 ? '#ff6685' : '#ff2d55';
-
-    ctx.shadowColor='rgba(255,30,75,.75)';
-    ctx.shadowBlur=5;
-
-    ctx.font=`700 ${fs_}px "JetBrains Mono", monospace`;
-
-    ctx.fillText(i.t,0,0);
+    ctx.fillText(item.text,x,y);
 
     ctx.restore();
   }
 
-  /*
-    Quando tutte le scritte sono apparse,
-    parte il cursore.
-  */
-
   if(
     !fillDone &&
-    items.length &&
+    items.length>0 &&
     done===items.length &&
-    el>maxD+700
+    elapsed>maxDelay+800
   ){
     fillDone=true;
     onFilled();
@@ -806,11 +795,6 @@ function startHeart(){
   raf=requestAnimationFrame(draw);
 }
 
-/*
-  Se cambia la dimensione dello schermo,
-  ricostruisco il cuore.
-*/
-
 addEventListener('resize',()=>{
   if(state==='heart'||state==='cursor'){
     const old=startT;
@@ -819,7 +803,7 @@ addEventListener('resize',()=>{
   }
 });
 
-/* ---------- CURSORE CHE CLICCA ---------- */
+/* CURSORE ANIMATO */
 
 const cur=$('#cur');
 
@@ -836,7 +820,7 @@ function moveCursor(x0,y0,x1,y1,dur){
 
       let p=Math.min(1,(now-t0)/dur);
 
-      const e=p<.5
+      const e=p<0.5
         ? 2*p*p
         : 1-Math.pow(-2*p+2,2)/2;
 
@@ -875,7 +859,7 @@ async function onFilled(){
     sy,
     heartCx-4,
     heartCy-R*0.1,
-    reduce ? 10 : 1900
+    reduce?10:1900
   );
 
   await sleep(450);
@@ -892,8 +876,8 @@ async function clickHeart(){
   cur.classList.add('press');
 
   const r=document.createElement('div');
-  r.className='rip';
 
+  r.className='rip';
   r.style.left=heartCx+'px';
   r.style.top=(heartCy-R*0.1)+'px';
 
@@ -912,16 +896,15 @@ async function clickHeart(){
   showStage();
 }
 
-cv.addEventListener('click',clickHeart);
+cv.addEventListener('click',()=>{
+  if(state==='heart') onFilled();
+});
 
-cv.addEventListener('touchend',e=>{
-  if(state==='cursor'){
-    e.preventDefault();
-    clickHeart();
-  }
-},{passive:false});
+cv.addEventListener('touchend',()=>{
+  if(state==='heart') onFilled();
+},{passive:true});
 
-/* ---------- FOTO A ROTAZIONE ---------- */
+/* FOTO */
 
 let userPhotos=[];
 let slideIdx=0;
@@ -950,6 +933,7 @@ function buildPhotos(){
   for(let i=0;i<n;i++){
 
     const d=document.createElement('div');
+
     d.className='ph';
 
     d.style.setProperty(
@@ -985,15 +969,15 @@ function buildPhotos(){
   }
 
   slideIdx=0;
-
   show(0);
 
   clearInterval(slideTimer);
 
   if(n>1){
-    slideTimer=setInterval(()=>{
-      show((slideIdx+1)%n);
-    },3800);
+    slideTimer=setInterval(
+      ()=>show((slideIdx+1)%n),
+      3800
+    );
   }
 }
 
@@ -1010,7 +994,7 @@ function show(i){
   });
 }
 
-/* ---------- LETTERA ---------- */
+/* LETTERA */
 
 let letterRun=0;
 
@@ -1022,6 +1006,7 @@ async function writeLetter(){
   box.innerHTML='';
 
   const to=document.createElement('span');
+
   to.className='to';
   to.textContent=`Per te, ${CONFIG.nome},`;
 
@@ -1086,7 +1071,7 @@ function showStage(){
   writeLetter();
 }
 
-/* ---------- CONTROLLI ---------- */
+/* CONTROLLI */
 
 $('#btn').addEventListener('click',()=>{
 
@@ -1119,7 +1104,6 @@ $('#replay').addEventListener('click',()=>{
   clearInterval(slideTimer);
 
   $('#stage').classList.remove('on');
-
   $('#replay').classList.remove('show');
 
   cv.classList.remove('dim');
@@ -1129,10 +1113,9 @@ $('#replay').addEventListener('click',()=>{
   startHeart();
 });
 
-/* AVVIO */
-
 intro();
 
 </script>
+
 </body>
 </html>
