@@ -78,6 +78,7 @@ input[type=file]{display:none}
     <div class="ln" id="l2"></div>
     <div class="ln ask" id="l3"></div>
     <button id="btn" type="button">🔒 DECIFRA IL MESSAGGIO</button>
+    <button id="addph" type="button">+ carica le tue foto</button>
     <input type="file" id="file" accept="image/*" multiple>
   </div>
 
@@ -134,59 +135,120 @@ async function intro(){
 
 /* ---------- cuore di testo ---------- */
 const cv = $('#heart'), ctx = cv.getContext('2d');
-let W, H, DPR, items = [], startT = 0, fillDone = false, heartCx, heartCy, R;
-function inHeart(u, v){ const a = u*u + v*v - 1; return a*a*a - u*u*v*v*v < 0; }
+let W, H, DPR, items = [], startT = 0, fillDone = false, heartCx, heartCy, R, fs_ = 12, raf;
+
+/* contorno del cuore: curva parametrica classica, centrata e scalata su R */
+function heartPoint(t){
+  const x = 16*Math.pow(Math.sin(t),3);
+  const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+  const k = R/16;
+  return {x: heartCx + x*k, y: heartCy - (y+2.5)*k};
+}
+/* il punto (px,py) è dentro il poligono? (ray casting) */
+function insidePoly(px, py, poly){
+  let c = false;
+  for(let i=0, j=poly.length-1; i<poly.length; j=i++){
+    const a = poly[i], b = poly[j];
+    if((a.y > py) !== (b.y > py) && px < (b.x-a.x)*(py-a.y)/(b.y-a.y) + a.x) c = !c;
+  }
+  return c;
+}
+function shuffle(a){ const b=[...a]; for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
 
 function buildHeart(){
   DPR = Math.min(devicePixelRatio || 1, 2);
   W = innerWidth; H = innerHeight;
   cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
-  R = Math.min(W*0.36, H*0.30);
-  heartCx = W/2; heartCy = H/2 + R*0.08;
-  const fs = Math.max(9, R/9);
+  R = Math.min(W*0.40, H*0.36);          // metà larghezza del cuore
+  heartCx = W/2; heartCy = H/2;
+  const fs = Math.max(9, R/17); fs_ = fs;  // grandezza del testo
   ctx.font = `700 ${fs}px "JetBrains Mono", monospace`;
-  const gap = fs*0.9; let li = Math.floor(Math.random()*CONFIG.lingue.length);
-  const rh = fs*1.25;
-  items = [];
-  for(let y = heartCy - R*1.35; y < heartCy + R*1.35; y += rh){
-    let x = heartCx - R*1.4 - Math.random()*gap*3;
-    while(x < heartCx + R*1.4){
-      const t = CONFIG.lingue[(li += 7) % CONFIG.lingue.length];
-      const w = ctx.measureText(t).width + gap, cxp = x + w/2; x += w;
-      const u = (cxp - heartCx)/R, v = (heartCy - y)/R + 0.08;
-      if(inHeart(u, v)){
-        // più tardi in alto, per un riempimento dal basso verso l'alto con un po' di caos
-        const order = (1 - (v+1.2)/2.5) * 0; 
-        items.push({x: cxp, t, y, d: Math.random()*5200 + (heartCy + R - y)*0 + order, ph: Math.random()*6.28, big: Math.random() < .12});
+  const names = shuffle(CONFIG.lingue); let li = 0;
+  const next = () => names[li++ % names.length];
+
+  /* 1) campiono il contorno e misuro la sua lunghezza */
+  const N = 900, pts = [], cum = [0];
+  for(let i=0;i<=N;i++){
+    const p = heartPoint(i/N*Math.PI*2); pts.push(p);
+    if(i) cum.push(cum[i-1] + Math.hypot(p.x-pts[i-1].x, p.y-pts[i-1].y));
+  }
+  const L = cum[N];
+
+  /* 2) scelgo quante frasi entrano nel perimetro e le distribuisco a distanza uguale */
+  const ring = []; let sum = 0;
+  while(true){
+    const t = next(), w = ctx.measureText(t).width;
+    if(sum + w + fs*0.7*(ring.length+1) > L){ li--; break; }
+    ring.push({t, w}); sum += w;
+  }
+  const gapR = (L - sum)/ring.length;
+  let s = gapR/2, j = 1; items = [];
+  ring.forEach((r, idx) => {
+    const c = s + r.w/2;
+    while(j < N && cum[j] < c) j++;
+    const a = pts[Math.max(0,j-6)], b = pts[Math.min(N,j+6)];       // tangente alla curva
+    let ang = Math.atan2(b.y-a.y, b.x-a.x);
+    if(ang > Math.PI/2 || ang < -Math.PI/2) ang += Math.PI;         // testo mai capovolto
+    // le frasi del contorno appaiono una dopo l'altra, partendo dall'alto al centro
+    items.push({x: pts[j].x, y: pts[j].y, t: r.t, ang, ring: true, d: 300 + idx*140, ph: Math.random()*6.28, big: false});
+    s += r.w + gapR;
+  });
+  const ringEnd = 300 + ring.length*140;
+
+  /* 3) riempio l'interno (un po' rimpicciolito, per non toccare il contorno) */
+  const inset = 0.86;
+  const inside = (px, py) => insidePoly(heartCx + (px-heartCx)/inset, heartCy + (py-heartCy)/inset, pts);
+  const rh = fs*1.35;
+  for(let y = heartCy - R*1.2; y < heartCy + R*1.2; y += rh){
+    let x = heartCx - R*1.1 - Math.random()*fs*3;
+    while(x < heartCx + R*1.1){
+      const t = next(), w = ctx.measureText(t).width + fs*0.9, cxp = x + w/2; x += w;
+      if(inside(cxp, y) && inside(cxp - w/2, y) && inside(cxp + w/2 - fs*0.9, y)){
+        const dist = Math.hypot(cxp-heartCx, y-heartCy)/R;
+        // l'interno parte dopo il contorno: prima le frasi vicine al bordo, poi verso il centro
+        items.push({x: cxp, y, t, ang: 0, ring: false,
+          d: ringEnd + 500 + (1 - Math.min(1, dist/1.1))*2600 + Math.random()*1500,
+          ph: Math.random()*6.28, big: Math.random() < .1});
       }
     }
   }
-  items.forEach(i => { i.d = (1 - (heartCy - i.y)/(R*2.4) - .5) * 3200 + Math.random()*2600; if(i.d<0) i.d = Math.random()*600; });
-  fs_ = fs;
 }
-let fs_ = 12, raf;
+
 function draw(t){
   raf = requestAnimationFrame(draw);
   const el = t - startT;
   ctx.clearRect(0,0,W,H);
-  const beat = 1 + 0.022*Math.sin(el/210) + 0.012*Math.sin(el/105);
+  const beat = 1 + 0.022*Math.sin(el/210) + 0.012*Math.sin(el/105);   // battito
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  let done = 0;
+  let done = 0, maxD = 0;
   for(const i of items){
+    if(i.d > maxD) maxD = i.d;
     const age = el - i.d;
     if(age < 0) continue;
     done++;
     const a = Math.min(1, age/700);
     const tw = 0.62 + 0.38*Math.sin(el/600 + i.ph);
     const x = heartCx + (i.x - heartCx)*beat, y = heartCy + (i.y - heartCy)*beat;
-    ctx.globalAlpha = a * (0.55 + 0.45*tw);
-    ctx.fillStyle = i.big ? '#ff5c7a' : '#ff1f4b';
-    ctx.shadowColor = 'rgba(255,30,75,.7)'; ctx.shadowBlur = i.big ? 10 : 4;
-    ctx.font = `${i.big?700:500} ${fs_*(i.big?1.08:1)}px "JetBrains Mono", monospace`;
-    ctx.fillText(i.t, x + (1-a)*(Math.random()-.5)*8, y);
+    ctx.save();
+    if(i.ring){
+      // contorno: più luminoso, con piccolo "pop" quando compare
+      const sc = 1 + (1-a)*0.6;
+      ctx.translate(x, y); ctx.rotate(i.ang); ctx.scale(sc, sc);
+      ctx.globalAlpha = a*(0.85 + 0.15*tw);
+      ctx.fillStyle = '#ff4d6d'; ctx.shadowColor = 'rgba(255,60,100,.9)'; ctx.shadowBlur = 12;
+      ctx.font = `700 ${fs_*1.12}px "JetBrains Mono", monospace`;
+      ctx.fillText(i.t, 0, 0);
+    } else {
+      ctx.translate(x + (1-a)*(Math.random()-.5)*8, y);
+      ctx.globalAlpha = a*(0.5 + 0.5*tw);
+      ctx.fillStyle = i.big ? '#ff5c7a' : '#ff1f4b';
+      ctx.shadowColor = 'rgba(255,30,75,.7)'; ctx.shadowBlur = i.big ? 10 : 4;
+      ctx.font = `${i.big?700:500} ${fs_*(i.big?1.08:1)}px "JetBrains Mono", monospace`;
+      ctx.fillText(i.t, 0, 0);
+    }
+    ctx.restore();
   }
-  ctx.globalAlpha = 1; ctx.shadowBlur = 0;
-  if(!fillDone && items.length && done === items.length && el > items.reduce((m,i)=>Math.max(m,i.d),0) + 900){
+  if(!fillDone && items.length && done === items.length && el > maxD + 900){
     fillDone = true; onFilled();
   }
 }
