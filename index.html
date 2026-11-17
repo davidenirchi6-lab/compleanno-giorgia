@@ -324,7 +324,10 @@ canvas#heart.dim{
 <div id="intro">
   <div class="ln sys" id="l1"></div>
   <div class="ln" id="l2"></div>
-  <div class="ln ask" id="l3"></div>
+  <div class="ln" id="l3"></div>
+  <div class="ln sys" id="l4"></div>
+  <div class="ln ok" id="l5"></div>
+  <div class="ln ask" id="l6"></div>
   <button id="btn" type="button">🔒 DECIFRA IL MESSAGGIO</button>
 </div>
 
@@ -505,7 +508,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let state = 'intro';
 
-/* INTRO */
+/* INTRO IN STILE TERMINALE */
 
 async function typeInto(el,text,speed=28){
   el.classList.add('caret');
@@ -521,31 +524,54 @@ async function typeInto(el,text,speed=28){
 
 async function intro(){
 
-  await sleep(500);
+  await sleep(400);
 
   await typeInto(
     $('#l1'),
-    '[system] Inizializzo cuore.PROTOCOL_v2.0 ...'
+    '[system] Avvio connessione sicura...'
   );
 
-  await sleep(300);
+  await sleep(350);
 
-  $('#l2').innerHTML =
-    '<span style="font-weight:700">[status]</span> <span class="ok">PRONTO</span>';
+  await typeInto(
+    $('#l2'),
+    '[network] Connessione stabilita.'
+  );
+
+  await sleep(400);
+
+  await typeInto(
+    $('#l3'),
+    '[access] Ricerca lettera segreta: GIORGIA'
+  );
+
+  await sleep(450);
+
+  await typeInto(
+    $('#l4'),
+    '[decrypt] Decodifica messaggio in corso...'
+  );
 
   await sleep(500);
 
   await typeInto(
-    $('#l3'),
-    '> Ho trovato un pacchetto criptato per te.'
+    $('#l5'),
+    '[status] ACCESSO AUTORIZZATO'
   );
 
-  await sleep(300);
+  await sleep(400);
+
+  await typeInto(
+    $('#l6'),
+    '> Una lettera speciale ti sta aspettando.'
+  );
+
+  await sleep(500);
 
   $('#btn').classList.add('show');
 }
 
-/* CUORE PIENO DI SCRITTE */
+/* CUORE */
 
 const cv = $('#heart');
 const ctx = cv.getContext('2d');
@@ -576,6 +602,8 @@ function shuffle(a){
   return b;
 }
 
+/* CUORE RIDISEGNATO */
+
 function buildHeart(){
 
   DPR=Math.min(devicePixelRatio||1,2);
@@ -588,7 +616,7 @@ function buildHeart(){
 
   ctx.setTransform(DPR,0,0,DPR,0,0);
 
-  R=Math.min(W*0.46,H*0.43);
+  R=Math.min(W*0.46,H*0.47);
 
   heartCx=W/2;
   heartCy=H/2;
@@ -598,22 +626,20 @@ function buildHeart(){
   ctx.font=`700 ${fs_}px "JetBrains Mono", monospace`;
 
   const phrases=shuffle(CONFIG.lingue);
-
   let phraseIndex=0;
 
   items=[];
 
   const rowHeight=fs_*1.45;
   const step=0.0025;
-
   let rowIndex=0;
 
-  for(let py=-0.98;py<=0.98;py+=rowHeight/R){
+  for(let py=0.98;py>=-0.98;py-=rowHeight/R){
 
     let intervals=[];
     let start=null;
 
-    for(let px=-1.1;px<=1.1;px+=step){
+    for(let px=-1.15;px<=1.15;px+=step){
 
       const inside=insideHeart(px,py);
 
@@ -621,7 +647,7 @@ function buildHeart(){
         start=px;
       }
 
-      if((!inside||px>=1.1)&&start!==null){
+      if((!inside||px>=1.15)&&start!==null){
 
         intervals.push({
           left:start*R,
@@ -635,12 +661,16 @@ function buildHeart(){
     for(const interval of intervals){
 
       const width=interval.right-interval.left;
-      const gap=fs_*0.8;
+      const gap=fs_*0.65;
 
       let row=[];
       let totalWidth=0;
+      let checked=0;
 
-      while(phraseIndex<phrases.length){
+      while(
+        phraseIndex<phrases.length &&
+        checked<phrases.length
+      ){
 
         const phrase=phrases[phraseIndex];
         const phraseWidth=ctx.measureText(phrase).width;
@@ -649,17 +679,19 @@ function buildHeart(){
           ? phraseWidth
           : phraseWidth+gap;
 
-        if(totalWidth+needed>width){
-          break;
-        }
-
-        row.push({
-          text:phrase,
-          width:phraseWidth
-        });
-
-        totalWidth+=needed;
         phraseIndex++;
+        checked++;
+
+        if(totalWidth+needed<=width){
+
+          row.push({
+            text:phrase,
+            width:phraseWidth
+          });
+
+          totalWidth+=needed;
+          checked=0;
+        }
       }
 
       let x=heartCx+interval.left+(width-totalWidth)/2;
@@ -670,7 +702,7 @@ function buildHeart(){
           x:x+word.width/2,
           y:heartCy-py*R,
           text:word.text,
-          d:350+rowIndex*95+colIndex*25,
+          d:300+rowIndex*48+colIndex*10,
           phase:Math.random()*Math.PI*2,
           size:fs_*(0.95+Math.random()*0.08),
           center:false
@@ -681,21 +713,13 @@ function buildHeart(){
     }
 
     rowIndex++;
-
-    if(phraseIndex>=phrases.length) break;
   }
-
-  /*
-    TI AMO AL CENTRO.
-    La scritta viene disegnata per ultima,
-    così resta ben visibile sopra alle altre.
-  */
 
   items.push({
     x:heartCx,
     y:heartCy,
     text:"TI AMO",
-    d:350+Math.floor(0.98*R/(fs_*1.45))*95,
+    d:300+Math.floor(rowIndex*0.48)*48,
     phase:0,
     size:fs_*3.2,
     center:true
@@ -793,11 +817,9 @@ addEventListener('resize',()=>{
 
   if(state==='heart'||state==='cursor'){
 
-    const old=startT;
-
     buildHeart();
 
-    startT=old-20000;
+    startT=performance.now()-30000;
   }
 });
 
