@@ -26,7 +26,6 @@
 }
 
 *{box-sizing:inherit;margin:0}
-
 html{height:100%}
 
 body{
@@ -102,18 +101,6 @@ canvas#heart.dim{
 #btn.show{opacity:1}
 #btn:hover{background:rgba(255,45,85,.2)}
 
-#addph{
-  position:absolute;
-  left:8vw;
-  bottom:calc(20px + env(safe-area-inset-bottom,0px));
-  font:400 11px "JetBrains Mono",monospace;
-  color:var(--muted);
-  background:none;
-  border:0;
-  cursor:pointer;
-  text-decoration:underline;
-}
-
 .caret::after{
   content:"▌";
   color:var(--rose);
@@ -138,7 +125,12 @@ canvas#heart.dim{
   will-change:transform;
 }
 
-#cur svg{width:100%;height:100%;transition:transform .12s}
+#cur svg{
+  width:100%;
+  height:100%;
+  transition:transform .12s;
+}
+
 #cur.press svg{transform:scale(.8)}
 
 .rip{
@@ -294,7 +286,6 @@ canvas#heart.dim{
 }
 
 #replay.show{opacity:1}
-input[type=file]{display:none}
 
 /* MOBILE */
 
@@ -335,8 +326,6 @@ input[type=file]{display:none}
   <div class="ln" id="l2"></div>
   <div class="ln ask" id="l3"></div>
   <button id="btn" type="button">🔒 DECIFRA IL MESSAGGIO</button>
-  <button id="addph" type="button">+ carica le tue foto</button>
-  <input type="file" id="file" accept="image/*" multiple>
 </div>
 
 <div id="cur">
@@ -363,7 +352,6 @@ const CONFIG = {
   nome: "Giorgia",
   firma: "Per sempre tuo, [Nome]",
 
-  // Ogni frase è diversa: nessuna viene ripetuta.
   lingue: [
     "ti amo",
     "I love you",
@@ -516,7 +504,6 @@ const sleep = ms => new Promise(r => setTimeout(r,ms));
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let state = 'intro';
-let timers = [];
 
 /* INTRO */
 
@@ -533,11 +520,12 @@ async function typeInto(el,text,speed=28){
 }
 
 async function intro(){
+
   await sleep(500);
 
   await typeInto(
     $('#l1'),
-    '[system] Inizializzo cuore.PROTOCOL_v2.0 ...'
+    '[system] Inizializzo lettera per il completanno.PROTOCOL_v2.0 ...'
   );
 
   await sleep(300);
@@ -549,7 +537,7 @@ async function intro(){
 
   await typeInto(
     $('#l3'),
-    '> Ho trovato un pacchetto criptato per te.'
+    '> Ho trovato una lettera criptato per te.'
   );
 
   await sleep(300);
@@ -569,15 +557,16 @@ let fillDone = false;
 let heartCx,heartCy,R,fs_;
 let raf;
 
-/* Equazione matematica del cuore */
-
 function insideHeart(x,y){
-  const a = x*x + y*y - 1;
-  return a*a*a - x*x*y*y*y <= 0;
+
+  const a=x*x+y*y-1;
+
+  return a*a*a-x*x*y*y*y<=0;
 }
 
 function shuffle(a){
-  const b = [...a];
+
+  const b=[...a];
 
   for(let i=b.length-1;i>0;i--){
     const j=Math.floor(Math.random()*(i+1));
@@ -589,47 +578,35 @@ function shuffle(a){
 
 function buildHeart(){
 
-  DPR = Math.min(devicePixelRatio || 1,2);
+  DPR=Math.min(devicePixelRatio||1,2);
 
-  W = innerWidth;
-  H = innerHeight;
+  W=innerWidth;
+  H=innerHeight;
 
-  cv.width = W*DPR;
-  cv.height = H*DPR;
+  cv.width=W*DPR;
+  cv.height=H*DPR;
 
   ctx.setTransform(DPR,0,0,DPR,0,0);
 
-  /*
-    Cuore grande:
-    su telefono lascia un margine laterale,
-    su desktop occupa quasi tutta l'altezza.
-  */
+  R=Math.min(W*0.46,H*0.43);
 
-  R = Math.min(W*0.46,H*0.43);
+  heartCx=W/2;
+  heartCy=H/2;
 
-  heartCx = W/2;
-  heartCy = H/2;
+  fs_=Math.max(8,Math.min(12,R/27));
 
-  fs_ = Math.max(8,Math.min(12,R/27));
+  ctx.font=`700 ${fs_}px "JetBrains Mono", monospace`;
 
-  ctx.font = `700 ${fs_}px "JetBrains Mono", monospace`;
+  const phrases=shuffle(CONFIG.lingue);
 
-  // Ogni espressione viene consumata una volta sola.
-  const phrases = shuffle(CONFIG.lingue);
+  let phraseIndex=0;
 
-  let phraseIndex = 0;
-  items = [];
+  items=[];
 
-  const rowHeight = fs_*1.45;
-  const step = 0.0025;
+  const rowHeight=fs_*1.45;
+  const step=0.0025;
 
-  let rowIndex = 0;
-
-  /*
-    Il cuore viene riempito con righe orizzontali.
-    Le estremità di ogni riga seguono la formula
-    matematica della sagoma.
-  */
+  let rowIndex=0;
 
   for(let py=-0.98;py<=0.98;py+=rowHeight/R){
 
@@ -640,11 +617,11 @@ function buildHeart(){
 
       const inside=insideHeart(px,py);
 
-      if(inside && start===null){
+      if(inside&&start===null){
         start=px;
       }
 
-      if((!inside || px>=1.1) && start!==null){
+      if((!inside||px>=1.1)&&start!==null){
 
         intervals.push({
           left:start*R,
@@ -662,13 +639,6 @@ function buildHeart(){
 
       let row=[];
       let totalWidth=0;
-
-      /*
-        Cerca le frasi successive senza riutilizzarle.
-        Se una frase non entra, passa alla successiva
-        soltanto quando questa non può essere inserita
-        in quella riga.
-      */
 
       while(phraseIndex<phrases.length){
 
@@ -700,12 +670,10 @@ function buildHeart(){
           x:x+word.width/2,
           y:heartCy-py*R,
           text:word.text,
-
-          // Le righe appaiono dall'alto verso il basso.
           d:350+rowIndex*95+colIndex*25,
-
           phase:Math.random()*Math.PI*2,
-          size:fs_*(0.95+Math.random()*0.08)
+          size:fs_*(0.95+Math.random()*0.08),
+          center:false
         });
 
         x+=word.width+gap;
@@ -716,6 +684,22 @@ function buildHeart(){
 
     if(phraseIndex>=phrases.length) break;
   }
+
+  /*
+    TI AMO AL CENTRO.
+    La scritta viene disegnata per ultima,
+    così resta ben visibile sopra alle altre.
+  */
+
+  items.push({
+    x:heartCx,
+    y:heartCy,
+    text:"TI AMO",
+    d:350+Math.floor(0.98*R/(fs_*1.45))*95,
+    phase:0,
+    size:fs_*3.2,
+    center:true
+  });
 }
 
 function draw(t){
@@ -726,7 +710,6 @@ function draw(t){
 
   ctx.clearRect(0,0,W,H);
 
-  // Battito del cuore
   const beat=
     1+
     0.018*Math.sin(elapsed/210)+
@@ -758,14 +741,24 @@ function draw(t){
 
     ctx.save();
 
-    ctx.globalAlpha=opacity*glow;
+    ctx.globalAlpha=opacity*(item.center?1:glow);
 
-    ctx.fillStyle='#ff315d';
+    if(item.center){
 
-    ctx.shadowColor='rgba(255,35,85,0.85)';
-    ctx.shadowBlur=7;
+      ctx.fillStyle='#ffffff';
+      ctx.shadowColor='rgba(255,45,100,1)';
+      ctx.shadowBlur=28;
 
-    ctx.font=`700 ${item.size}px "JetBrains Mono", monospace`;
+      ctx.font=`700 ${item.size}px "JetBrains Mono", monospace`;
+
+    }else{
+
+      ctx.fillStyle='#ff315d';
+      ctx.shadowColor='rgba(255,35,85,0.85)';
+      ctx.shadowBlur=7;
+
+      ctx.font=`700 ${item.size}px "JetBrains Mono", monospace`;
+    }
 
     ctx.fillText(item.text,x,y);
 
@@ -773,11 +766,12 @@ function draw(t){
   }
 
   if(
-    !fillDone &&
-    items.length>0 &&
-    done===items.length &&
+    !fillDone&&
+    items.length>0&&
+    done===items.length&&
     elapsed>maxDelay+800
   ){
+
     fillDone=true;
     onFilled();
   }
@@ -796,9 +790,13 @@ function startHeart(){
 }
 
 addEventListener('resize',()=>{
+
   if(state==='heart'||state==='cursor'){
+
     const old=startT;
+
     buildHeart();
+
     startT=old-20000;
   }
 });
@@ -836,13 +834,15 @@ function moveCursor(x0,y0,x1,y1,dur){
 
       cur.style.transform=`translate(${x}px,${y}px)`;
 
-      p<1 ? requestAnimationFrame(f) : res();
+      p<1?requestAnimationFrame(f):res();
 
     })(performance.now());
   });
 }
 
 async function onFilled(){
+
+  if(state!=='heart') return;
 
   state='cursor';
 
@@ -942,6 +942,7 @@ function buildPhotos(){
     );
 
     const im=document.createElement('div');
+
     im.className='im';
 
     if(src.length){
@@ -956,15 +957,19 @@ function buildPhotos(){
     const cap=CONFIG.didascalie[i];
 
     if(cap){
+
       const c=document.createElement('div');
+
       c.className='cap';
       c.textContent=cap;
+
       d.append(c);
     }
 
     box.insertBefore(d,dots);
 
     const dot=document.createElement('i');
+
     dots.append(dot);
   }
 
@@ -1080,21 +1085,6 @@ $('#btn').addEventListener('click',()=>{
   $('#intro').classList.add('gone');
 
   startHeart();
-});
-
-$('#addph').addEventListener('click',()=>{
-  $('#file').click();
-});
-
-$('#file').addEventListener('change',e=>{
-
-  userPhotos=[
-    ...e.target.files
-  ].map(f=>URL.createObjectURL(f));
-
-  const b=$('#addph');
-
-  b.textContent=`✓ ${userPhotos.length} foto caricate`;
 });
 
 $('#replay').addEventListener('click',()=>{
