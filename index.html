@@ -511,11 +511,12 @@ let state = 'intro';
 /* INTRO IN STILE TERMINALE */
 
 async function typeInto(el,text,speed=28){
+
   el.classList.add('caret');
   el.innerHTML='';
 
   for(const c of text){
-    el.append(c);
+    el.append(document.createTextNode(c));
     await sleep(reduce ? 0 : speed + Math.random()*20);
   }
 
@@ -525,49 +526,24 @@ async function typeInto(el,text,speed=28){
 async function intro(){
 
   await sleep(400);
-
-  await typeInto(
-    $('#l1'),
-    '[system] Avvio connessione sicura...'
-  );
+  await typeInto($('#l1'),'[system] Avvio connessione sicura...');
 
   await sleep(350);
-
-  await typeInto(
-    $('#l2'),
-    '[network] Connessione stabilita.'
-  );
+  await typeInto($('#l2'),'[network] Connessione stabilita.');
 
   await sleep(400);
-
-  await typeInto(
-    $('#l3'),
-    '[access] Ricerca lettera segreta:'
-  );
+  await typeInto($('#l3'),'[access] Ricerca pacchetto segreto: GIORGIA');
 
   await sleep(450);
-
-  await typeInto(
-    $('#l4'),
-    '[decrypt] Decodifica messaggio in corso...'
-  );
+  await typeInto($('#l4'),'[decrypt] Decodifica messaggio in corso...');
 
   await sleep(500);
-
-  await typeInto(
-    $('#l5'),
-    '[status] ACCESSO AUTORIZZATO'
-  );
+  await typeInto($('#l5'),'[status] ACCESSO AUTORIZZATO');
 
   await sleep(400);
-
-  await typeInto(
-    $('#l6'),
-    '> Una lettera speciale ti sta aspettando.'
-  );
+  await typeInto($('#l6'),'> Un messaggio speciale ti sta aspettando.');
 
   await sleep(500);
-
   $('#btn').classList.add('show');
 }
 
@@ -602,7 +578,13 @@ function shuffle(a){
   return b;
 }
 
-/* CUORE RIDISEGNATO */
+/*
+  CUORE CORRETTO
+
+  Le frasi vengono distribuite su ogni riga.
+  Se una frase non entra, il codice cerca un'altra frase.
+  Quando la lista finisce, ricomincia dall'inizio.
+*/
 
 function buildHeart(){
 
@@ -626,13 +608,21 @@ function buildHeart(){
   ctx.font=`700 ${fs_}px "JetBrains Mono", monospace`;
 
   const phrases=shuffle(CONFIG.lingue);
+
   let phraseIndex=0;
 
   items=[];
 
   const rowHeight=fs_*1.45;
   const step=0.0025;
+  const gap=fs_*0.65;
+
   let rowIndex=0;
+
+  /*
+    Scorriamo il cuore dall'alto verso il basso.
+    Ogni riga viene riempita indipendentemente.
+  */
 
   for(let py=0.98;py>=-0.98;py-=rowHeight/R){
 
@@ -643,11 +633,11 @@ function buildHeart(){
 
       const inside=insideHeart(px,py);
 
-      if(inside&&start===null){
+      if(inside && start===null){
         start=px;
       }
 
-      if((!inside||px>=1.15)&&start!==null){
+      if((!inside || px>=1.15) && start!==null){
 
         intervals.push({
           left:start*R,
@@ -661,50 +651,76 @@ function buildHeart(){
     for(const interval of intervals){
 
       const width=interval.right-interval.left;
-      const gap=fs_*0.65;
+
+      if(width<fs_*2.5) continue;
 
       let row=[];
       let totalWidth=0;
-      let checked=0;
 
-      while(
-        phraseIndex<phrases.length &&
-        checked<phrases.length
-      ){
+      /*
+        Cerca frasi che entrano nello spazio disponibile.
+        Non consuma le frasi che non entrano.
+      */
 
-        const phrase=phrases[phraseIndex];
-        const phraseWidth=ctx.measureText(phrase).width;
+      while(true){
 
-        const needed=row.length===0
-          ? phraseWidth
-          : phraseWidth+gap;
+        let selected=null;
 
-        phraseIndex++;
-        checked++;
+        for(let attempt=0;attempt<phrases.length;attempt++){
 
-        if(totalWidth+needed<=width){
+          const phrase=phrases[phraseIndex % phrases.length];
 
-          row.push({
-            text:phrase,
-            width:phraseWidth
-          });
+          phraseIndex++;
 
-          totalWidth+=needed;
-          checked=0;
+          const phraseWidth=ctx.measureText(phrase).width;
+
+          const needed=phraseWidth+(row.length>0?gap:0);
+
+          if(totalWidth+needed<=width){
+
+            selected={
+              text:phrase,
+              width:phraseWidth
+            };
+
+            break;
+          }
         }
+
+        /*
+          Se nessuna frase entra nello spazio rimasto,
+          passa alla riga successiva.
+        */
+
+        if(!selected) break;
+
+        row.push(selected);
+
+        totalWidth+=selected.width+(row.length>1?gap:0);
       }
+
+      /*
+        Centra tutte le frasi all'interno della riga.
+      */
 
       let x=heartCx+interval.left+(width-totalWidth)/2;
 
       row.forEach((word,colIndex)=>{
 
         items.push({
+
           x:x+word.width/2,
+
           y:heartCy-py*R,
+
           text:word.text,
-          d:300+rowIndex*48+colIndex*10,
+
+          d:250+rowIndex*34+colIndex*8,
+
           phase:Math.random()*Math.PI*2,
+
           size:fs_*(0.95+Math.random()*0.08),
+
           center:false
         });
 
@@ -715,16 +731,35 @@ function buildHeart(){
     rowIndex++;
   }
 
+  /*
+    La scritta centrale appare dopo le frasi del cuore.
+  */
+
+  let lastDelay=0;
+
+  for(const item of items){
+    if(item.d>lastDelay) lastDelay=item.d;
+  }
+
   items.push({
+
     x:heartCx,
     y:heartCy,
+
     text:"TI AMO",
-    d:300+Math.floor(rowIndex*0.48)*48,
+
+    d:lastDelay+450,
+
     phase:0,
+
     size:fs_*3.2,
+
     center:true
   });
+
 }
+
+/* DISEGNO E ANIMAZIONE */
 
 function draw(t){
 
@@ -790,13 +825,14 @@ function draw(t){
   }
 
   if(
-    !fillDone&&
-    items.length>0&&
-    done===items.length&&
+    !fillDone &&
+    items.length>0 &&
+    done===items.length &&
     elapsed>maxDelay+800
   ){
 
     fillDone=true;
+
     onFilled();
   }
 }
@@ -806,6 +842,7 @@ function startHeart(){
   buildHeart();
 
   fillDone=false;
+
   startT=performance.now();
 
   cancelAnimationFrame(raf);
@@ -950,6 +987,7 @@ function buildPhotos(){
   const n=src.length||PLACE.length;
 
   const dots=$('#dots');
+
   dots.innerHTML='';
 
   for(let i=0;i<n;i++){
@@ -996,11 +1034,13 @@ function buildPhotos(){
   }
 
   slideIdx=0;
+
   show(0);
 
   clearInterval(slideTimer);
 
   if(n>1){
+
     slideTimer=setInterval(
       ()=>show((slideIdx+1)%n),
       3800
@@ -1028,6 +1068,7 @@ let letterRun=0;
 async function writeLetter(){
 
   const id=++letterRun;
+
   const box=$('#letter');
 
   box.innerHTML='';
@@ -1035,6 +1076,7 @@ async function writeLetter(){
   const to=document.createElement('span');
 
   to.className='to';
+
   to.textContent=`Per te, ${CONFIG.nome},`;
 
   box.append(to);
@@ -1064,6 +1106,7 @@ async function writeLetter(){
       const s=document.createElement('span');
 
       s.className='w';
+
       s.textContent=w+'\u00A0';
 
       para.append(s);
@@ -1116,6 +1159,7 @@ $('#replay').addEventListener('click',()=>{
   clearInterval(slideTimer);
 
   $('#stage').classList.remove('on');
+
   $('#replay').classList.remove('show');
 
   cv.classList.remove('dim');
