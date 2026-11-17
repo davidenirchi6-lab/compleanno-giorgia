@@ -4,372 +4,1135 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Per te</title>
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+
 <style>
 :root{
-  --bg:#07060a; --ink:#f3e9ee; --rose:#ff2d55; --rose-dim:#c2284a; --sys:#e0508a; --ok:#39e07a; --paper:#fbf4ee; --muted:#8d7f87;
+  --bg:#07060a;
+  --ink:#f3e9ee;
+  --rose:#ff2d55;
+  --rose-dim:#c2284a;
+  --sys:#e0508a;
+  --ok:#39e07a;
+  --paper:#fbf4ee;
+  --muted:#8d7f87;
   box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
 }
-:root[data-theme="light"],:root[data-theme="dark"]{--bg:#07060a}
-*{box-sizing:inherit;margin:0}
-html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px)}
-body{height:100%;background:var(--bg);color:var(--ink);font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;overflow:hidden}
-#app{position:relative;width:100%;height:100%;overflow:hidden}
-canvas#heart{position:absolute;inset:0;width:100%;height:100%;transition:opacity 1.6s ease,filter 1.6s ease,transform 1.6s ease}
-canvas#heart.dim{opacity:.16;filter:blur(2px);transform:scale(1.08)}
 
-/* intro */
-#intro{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 8vw;gap:14px;transition:opacity .8s}
-#intro.gone{opacity:0;pointer-events:none}
-.ln{font-size:clamp(12px,3.4vw,15px);line-height:1.6;min-height:1.6em}
-.sys{color:var(--sys)} .ok{color:var(--ok);font-weight:700}
+*{box-sizing:inherit;margin:0}
+
+html{
+  height:100%;
+  scroll-padding-top:env(safe-area-inset-top,0px);
+}
+
+body{
+  height:100%;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:"JetBrains Mono",monospace;
+  overflow:hidden;
+}
+
+#app{
+  position:relative;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+}
+
+canvas#heart{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  transition:opacity 1.6s ease,filter 1.6s ease,transform 1.6s ease;
+}
+
+canvas#heart.dim{
+  opacity:.16;
+  filter:blur(2px);
+  transform:scale(1.08);
+}
+
+/* INTRO */
+
+#intro{
+  position:absolute;
+  inset:0;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:0 8vw;
+  gap:14px;
+  transition:opacity .8s;
+}
+
+#intro.gone{
+  opacity:0;
+  pointer-events:none;
+}
+
+.ln{
+  font-size:clamp(12px,3.4vw,15px);
+  line-height:1.6;
+  min-height:1.6em;
+}
+
+.sys{color:var(--sys)}
+.ok{color:var(--ok);font-weight:700}
 .ask{color:var(--muted);font-style:italic}
-#btn{align-self:flex-start;margin-top:10px;background:rgba(255,45,85,.08);color:var(--rose);border:1px solid var(--rose-dim);padding:12px 18px;font:700 13px "JetBrains Mono",monospace;cursor:pointer;opacity:0;transition:opacity .6s,background .2s}
-#btn.show{opacity:1} #btn:hover{background:rgba(255,45,85,.2)}
-#btn:focus-visible,#addph:focus-visible,#replay:focus-visible{outline:2px solid var(--ok);outline-offset:3px}
-#addph{position:absolute;left:8vw;bottom:calc(20px + env(safe-area-inset-bottom,0px));font:400 11px "JetBrains Mono",monospace;color:var(--muted);background:none;border:0;cursor:pointer;text-decoration:underline}
-.caret::after{content:"▌";color:var(--rose);animation:bl 1s steps(1) infinite;margin-left:2px}
+
+#btn{
+  align-self:flex-start;
+  margin-top:10px;
+  background:rgba(255,45,85,.08);
+  color:var(--rose);
+  border:1px solid var(--rose-dim);
+  padding:12px 18px;
+  font:700 13px "JetBrains Mono",monospace;
+  cursor:pointer;
+  opacity:0;
+  transition:opacity .6s,background .2s;
+}
+
+#btn.show{opacity:1}
+#btn:hover{background:rgba(255,45,85,.2)}
+
+#addph{
+  position:absolute;
+  left:8vw;
+  bottom:calc(20px + env(safe-area-inset-bottom,0px));
+  font:400 11px "JetBrains Mono",monospace;
+  color:var(--muted);
+  background:none;
+  border:0;
+  cursor:pointer;
+  text-decoration:underline;
+}
+
+.caret::after{
+  content:"▌";
+  color:var(--rose);
+  animation:bl 1s steps(1) infinite;
+  margin-left:2px;
+}
+
 @keyframes bl{50%{opacity:0}}
 
-/* fake cursor */
-#cur{position:absolute;left:0;top:0;width:26px;height:26px;z-index:20;pointer-events:none;opacity:0;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));will-change:transform}
-#cur svg{width:100%;height:100%;transition:transform .12s}
-#cur.press svg{transform:scale(.8)}
-.rip{position:absolute;width:20px;height:20px;border:2px solid var(--rose);border-radius:50%;z-index:19;pointer-events:none;transform:translate(-50%,-50%);animation:rip .9s ease-out forwards}
-@keyframes rip{to{width:240px;height:240px;opacity:0}}
+/* CURSORE */
 
-/* reveal */
-#stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:5vw;padding:max(24px,env(safe-area-inset-top,0px)) 6vw 24px;opacity:0;pointer-events:none;transition:opacity 1.4s ease .3s}
-#stage.on{opacity:1;pointer-events:auto}
-#photos{position:relative;flex:0 0 auto;width:min(38vw,380px);aspect-ratio:3/4}
-.ph{position:absolute;inset:0;background:var(--paper);padding:10px 10px 44px;border-radius:3px;box-shadow:0 18px 50px rgba(255,45,85,.22),0 4px 14px rgba(0,0,0,.6);opacity:0;transform:rotate(var(--r,0deg)) scale(.94);transition:opacity 1.2s ease,transform 1.6s ease}
-.ph.act{opacity:1;transform:rotate(var(--r,0deg)) scale(1)}
-.ph .im{width:100%;height:100%;background-size:cover;background-position:center;border-radius:2px;display:flex;align-items:center;justify-content:center;color:#fff;font:600 22px Caveat,cursive;text-align:center;padding:12px}
-.ph .cap{position:absolute;left:0;right:0;bottom:10px;text-align:center;font:600 22px Caveat,cursive;color:#3a2a30}
-#dots{position:absolute;left:0;right:0;bottom:-26px;display:flex;justify-content:center;gap:7px}
-#dots i{width:6px;height:6px;border-radius:50%;background:#4a3a42;transition:background .4s,transform .4s}
-#dots i.on{background:var(--rose);transform:scale(1.4)}
-#letter{flex:1 1 0;max-width:460px;max-height:calc(100% - 20px);overflow-y:auto;font:500 clamp(20px,2.5vw,27px)/1.5 Caveat,"Segoe Script",cursive;color:var(--ink);scrollbar-width:none;padding:6px 2px}
+#cur{
+  position:absolute;
+  left:0;
+  top:0;
+  width:26px;
+  height:26px;
+  z-index:20;
+  pointer-events:none;
+  opacity:0;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));
+  will-change:transform;
+}
+
+#cur svg{
+  width:100%;
+  height:100%;
+  transition:transform .12s;
+}
+
+#cur.press svg{transform:scale(.8)}
+
+.rip{
+  position:absolute;
+  width:20px;
+  height:20px;
+  border:2px solid var(--rose);
+  border-radius:50%;
+  z-index:19;
+  pointer-events:none;
+  transform:translate(-50%,-50%);
+  animation:rip .9s ease-out forwards;
+}
+
+@keyframes rip{
+  to{width:240px;height:240px;opacity:0}
+}
+
+/* FOTO E LETTERA */
+
+#stage{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:5vw;
+  padding:max(24px,env(safe-area-inset-top,0px)) 6vw 24px;
+  opacity:0;
+  pointer-events:none;
+  transition:opacity 1.4s ease .3s;
+}
+
+#stage.on{
+  opacity:1;
+  pointer-events:auto;
+}
+
+#photos{
+  position:relative;
+  flex:0 0 auto;
+  width:min(38vw,380px);
+  aspect-ratio:3/4;
+}
+
+.ph{
+  position:absolute;
+  inset:0;
+  background:var(--paper);
+  padding:10px 10px 44px;
+  border-radius:3px;
+  box-shadow:0 18px 50px rgba(255,45,85,.22),0 4px 14px rgba(0,0,0,.6);
+  opacity:0;
+  transform:rotate(var(--r,0deg)) scale(.94);
+  transition:opacity 1.2s ease,transform 1.6s ease;
+}
+
+.ph.act{
+  opacity:1;
+  transform:rotate(var(--r,0deg)) scale(1);
+}
+
+.ph .im{
+  width:100%;
+  height:100%;
+  background-size:cover;
+  background-position:center;
+  border-radius:2px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:#fff;
+  font:600 22px Caveat,cursive;
+  text-align:center;
+  padding:12px;
+}
+
+.ph .cap{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:10px;
+  text-align:center;
+  font:600 22px Caveat,cursive;
+  color:#3a2a30;
+}
+
+#dots{
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-26px;
+  display:flex;
+  justify-content:center;
+  gap:7px;
+}
+
+#dots i{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:#4a3a42;
+  transition:background .4s,transform .4s;
+}
+
+#dots i.on{
+  background:var(--rose);
+  transform:scale(1.4);
+}
+
+#letter{
+  flex:1 1 0;
+  max-width:460px;
+  max-height:calc(100% - 20px);
+  overflow-y:auto;
+  font:500 clamp(20px,2.5vw,27px)/1.5 Caveat,"Segoe Script",cursive;
+  color:var(--ink);
+  scrollbar-width:none;
+  padding:6px 2px;
+}
+
 #letter::-webkit-scrollbar{display:none}
-#letter .to{display:block;color:var(--rose);font-size:1.25em;margin-bottom:.3em}
-#letter .w{opacity:0;display:inline-block;transform:translateY(5px);animation:wi .5s ease forwards}
-@keyframes wi{to{opacity:1;transform:none}}
-#replay{position:absolute;right:14px;top:calc(12px + env(safe-area-inset-top,0px));background:none;border:1px solid #3a2a32;color:var(--muted);font:400 11px "JetBrains Mono",monospace;padding:6px 10px;border-radius:20px;cursor:pointer;opacity:0;transition:opacity 1s}
+
+#letter .to{
+  display:block;
+  color:var(--rose);
+  font-size:1.25em;
+  margin-bottom:.3em;
+}
+
+#letter .w{
+  opacity:0;
+  display:inline-block;
+  transform:translateY(5px);
+  animation:wi .5s ease forwards;
+}
+
+@keyframes wi{
+  to{opacity:1;transform:none}
+}
+
+#replay{
+  position:absolute;
+  right:14px;
+  top:calc(12px + env(safe-area-inset-top,0px));
+  background:none;
+  border:1px solid #3a2a32;
+  color:var(--muted);
+  font:400 11px "JetBrains Mono",monospace;
+  padding:6px 10px;
+  border-radius:20px;
+  cursor:pointer;
+  opacity:0;
+  transition:opacity 1s;
+}
+
 #replay.show{opacity:1}
 input[type=file]{display:none}
 
 @media (max-width:720px){
-  #stage{flex-direction:column;gap:38px;justify-content:flex-start;padding-top:max(34px,env(safe-area-inset-top,0px))}
+  #stage{
+    flex-direction:column;
+    gap:38px;
+    justify-content:flex-start;
+    padding-top:max(34px,env(safe-area-inset-top,0px));
+  }
+
   #photos{width:min(62vw,280px)}
-  #letter{width:100%;max-width:520px;font-size:clamp(19px,5.4vw,24px);text-align:left;flex:1 1 auto;min-height:0}
+
+  #letter{
+    width:100%;
+    max-width:520px;
+    font-size:clamp(19px,5.4vw,24px);
+    text-align:left;
+    flex:1 1 auto;
+    min-height:0;
+  }
 }
-@media (prefers-reduced-motion:reduce){.ph,#stage,canvas#heart{transition-duration:.01s}}
+
+@media (prefers-reduced-motion:reduce){
+  .ph,#stage,canvas#heart{transition-duration:.01s}
+}
 </style>
 </head>
+
 <body>
 <div id="app">
+
   <canvas id="heart" aria-hidden="true"></canvas>
 
   <div id="intro">
     <div class="ln sys" id="l1"></div>
     <div class="ln" id="l2"></div>
     <div class="ln ask" id="l3"></div>
+
     <button id="btn" type="button">🔒 DECIFRA IL MESSAGGIO</button>
+
     <button id="addph" type="button">+ carica le tue foto</button>
     <input type="file" id="file" accept="image/*" multiple>
   </div>
 
-  <div id="cur"><svg viewBox="0 0 24 24"><path d="M3 2l7 19 3-8 8-3z" fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/></svg></div>
+  <div id="cur">
+    <svg viewBox="0 0 24 24">
+      <path d="M3 2l7 19 3-8 8-3z" fill="#fff" stroke="#000" stroke-width="1.4" stroke-linejoin="round"/>
+    </svg>
+  </div>
 
   <div id="stage">
-    <div id="photos"><div id="dots"></div></div>
+    <div id="photos">
+      <div id="dots"></div>
+    </div>
     <div id="letter" aria-live="polite"></div>
   </div>
+
   <button id="replay" type="button">↺ rivedi</button>
 </div>
 
 <script>
+
 /* ================== PERSONALIZZA QUI ================== */
+
 const CONFIG = {
-  nome: "amore",                       // come la chiami
-  firma: "Il tuo [Nome]",              // firma finale
-  // "ti amo" in tante lingue: puoi aggiungerne o toglierne quante vuoi
-  lingue: ["ti amo","I love you","te quiero","je t’aime","ich liebe dich","eu te amo","ik hou van je","jag älskar dig","jeg elsker deg","jeg elsker dig","minä rakastan sinua","ég elska þig","kocham cię","miluji tě","ľúbim ťa","szeretlek","te iubesc","обичам те","volim te","ljubim te","σ’ αγαπώ","я тебя люблю","я тебе кохаю","aš tave myliu","es tevi mīlu","ma armastan sind","të dua","те сакам","seni seviyorum","أحبك","אני אוהב אותך","دوستت دارم","مجھے تم سے پیار ہے","मैं तुमसे प्यार करता हूँ","আমি তোমাকে ভালোবাসি","நான் உன்னை காதலிக்கிறேன்","నేను నిన్ను ప్రేమిస్తున్నాను","我爱你","愛してる","사랑해","ฉันรักเธอ","anh yêu em","aku cinta kamu","saya cintakan awak","mahal kita","მიყვარხარ","ես քեզ սիրում եմ","мен сені жақсы көремін","би чамд хайртай","म तिमीलाई माया गर्छु","nakupenda","ngiyakuthanda","ek is lief vir jou","mo nifẹ rẹ","ina son ka","እወድሃለሁ","aloha au iā ʻoe","kei te aroha au ki a koe","mi amas vin","t’estimo","maite zaitut","quérote","tá grá agam duit","rwy’n dy garu di","inħobbok","ech hunn dech gär","ikh hob dikh lib","gihigugma tika","ខ្ញុំស្រលាញ់អ្នក","ຂ້ອຍຮັກເຈົ້າ","ကျွန်တော် မင်းကို ချစ်တယ်","මම ඔබට ආදරෙයි","ez te hez dikim","səni sevirəm","seni sevaman","waan ku jeclahay","tiako ianao","munakuyki","rohayhu","mwen renmen w","te amo"],
-  // Foto: metti qui i link/dati delle foto (data URI) oppure caricale col pulsante in basso a sinistra
-  foto: [],                            // es: ["data:image/jpeg;base64,...", ...]
-  didascalie: [],                      // es: ["Il nostro primo viaggio", "Quella sera..."]
+  nome: "amore",
+  firma: "Il tuo [Nome]",
+
+  lingue: [
+    "ti amo","I love you","te quiero","je t’aime",
+    "ich liebe dich","eu te amo","ik hou van je",
+    "jag älskar dig","jeg elsker deg","jeg elsker dig",
+    "minä rakastan sinua","ég elska þig","kocham cię",
+    "miluji tě","ľúbim ťa","szeretlek","te iubesc",
+    "обичам те","volim te","ljubim te","σ’ αγαπώ",
+    "я тебя люблю","я тебе кохаю","aš tave myliu",
+    "es tevi mīlu","ma armastan sind","të dua",
+    "те сакам","seni seviyorum","أحبك","אני אוהב אותך",
+    "دوستت دارم","مجھے تم سے پیار ہے",
+    "मैं तुमसे प्यार करता हूँ","আমি তোমাকে ভালোবাসি",
+    "நான் உன்னை காதலிக்கிறேன்",
+    "నేను నిన్ను ప్రేమిస్తున్నాను","我爱你","愛してる",
+    "사랑해","ฉันรักเธอ","anh yêu em","aku cinta kamu",
+    "saya cintakan awak","mahal kita","მიყვარხარ",
+    "ես քեզ սիրում եմ","мен сені жақсы көремін",
+    "би чамд хайртай","म तिमीलाई माया गर्छु",
+    "nakupenda","ngiyakuthanda","ek is lief vir jou",
+    "mo nifẹ rẹ","ina son ka","እወድሃለሁ",
+    "aloha au iā ʻoe","kei te aroha au ki a koe",
+    "mi amas vin","t’estimo","maite zaitut",
+    "quérote","tá grá agam duit","rwy’n dy garu di",
+    "inħobbok","ech hunn dech gär","ikh hob dikh lib",
+    "gihigugma tika","ខ្ញុំស្រលាញ់អ្នក",
+    "ຂ້ອຍຮັກເຈົ້າ","මම ඔබට ආදරෙයි",
+    "ez te hez dikim","səni sevirəm","seni sevaman",
+    "waan ku jeclahay","tiako ianao","munakuyki",
+    "rohayhu","mwen renmen w","te amo"
+  ],
+
+  foto: [],
+  didascalie: [],
+
   lettera:
 `Ogni giorno con te è la mia parte preferita della vita. Mi hai insegnato che le cose semplici sono quelle che contano di più: una risata a metà serata, una mano da stringere, un "ci sono io".
 
 Non so se riesco a dirti con le parole quanto sei importante per me, quindi ho provato a scriverlo in codice, come faccio io. Ma la verità è una sola, ed è facile da leggere.
 
 Ti amo. Oggi, domani e in tutte le versioni che verranno.`,
-  velocitaParola: 230                  // millisecondi tra una parola e l'altra
+
+  velocitaParola: 230
 };
+
 /* ====================================================== */
 
 const $ = s => document.querySelector(s);
-const sleep = ms => new Promise(r => setTimeout(r, ms));
+const sleep = ms => new Promise(r => setTimeout(r,ms));
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let state = 'intro', timers = [];
 
-/* ---------- intro: scritte da terminale ---------- */
-async function typeInto(el, text, speed = 28){
-  el.classList.add('caret'); el.innerHTML = '';
-  for(const c of text){ el.append(c); await sleep(reduce ? 0 : speed + Math.random()*20); }
+let state = 'intro';
+let W,H,DPR;
+let items = [];
+let startT = 0;
+let fillDone = false;
+let heartCx,heartCy,R,fs_;
+let raf;
+
+/* ---------- INTRO ---------- */
+
+async function typeInto(el,text,speed=28){
+  el.classList.add('caret');
+  el.innerHTML='';
+
+  for(const c of text){
+    el.append(c);
+    await sleep(reduce ? 0 : speed + Math.random()*20);
+  }
+
   el.classList.remove('caret');
 }
+
 async function intro(){
   await sleep(500);
-  await typeInto($('#l1'), '[system] Inizializzo cuore.PROTOCOL_v2.0 ...');
+
+  await typeInto(
+    $('#l1'),
+    '[system] Inizializzo cuore.PROTOCOL_v2.0 ...'
+  );
+
   await sleep(300);
-  $('#l2').innerHTML = '<span style="font-weight:700">[status]</span> <span class="ok">PRONTO</span>';
+
+  $('#l2').innerHTML =
+    '<span style="font-weight:700">[status]</span> <span class="ok">PRONTO</span>';
+
   await sleep(500);
-  await typeInto($('#l3'), '> Ho trovato un pacchetto criptato per te.');
+
+  await typeInto(
+    $('#l3'),
+    '> Ho trovato un pacchetto criptato per te.'
+  );
+
   await sleep(300);
   $('#btn').classList.add('show');
 }
 
-/* ---------- cuore di testo ---------- */
-const cv = $('#heart'), ctx = cv.getContext('2d');
-let W, H, DPR, items = [], startT = 0, fillDone = false, heartCx, heartCy, R, fs_ = 12, raf;
+/* ---------- CUORE DI TESTO ---------- */
 
-/* contorno del cuore: curva parametrica classica, centrata e scalata su R */
+const cv = $('#heart');
+const ctx = cv.getContext('2d');
+
+/*
+  Questa funzione crea il contorno matematico del cuore.
+  R è stato aumentato per rendere il cuore molto più grande.
+*/
+
 function heartPoint(t){
   const x = 16*Math.pow(Math.sin(t),3);
-  const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+
+  const y =
+    13*Math.cos(t)
+    - 5*Math.cos(2*t)
+    - 2*Math.cos(3*t)
+    - Math.cos(4*t);
+
   const k = R/16;
-  return {x: heartCx + x*k, y: heartCy - (y+2.5)*k};
+
+  return {
+    x:heartCx + x*k,
+    y:heartCy - (y+2.5)*k
+  };
 }
-/* il punto (px,py) è dentro il poligono? (ray casting) */
-function insidePoly(px, py, poly){
+
+/* Controlla se un punto si trova dentro il cuore */
+
+function insidePoly(px,py,poly){
   let c = false;
-  for(let i=0, j=poly.length-1; i<poly.length; j=i++){
-    const a = poly[i], b = poly[j];
-    if((a.y > py) !== (b.y > py) && px < (b.x-a.x)*(py-a.y)/(b.y-a.y) + a.x) c = !c;
+
+  for(let i=0,j=poly.length-1;i<poly.length;j=i++){
+    const a = poly[i];
+    const b = poly[j];
+
+    if(
+      (a.y>py)!==(b.y>py) &&
+      px < (b.x-a.x)*(py-a.y)/(b.y-a.y)+a.x
+    ){
+      c=!c;
+    }
   }
+
   return c;
 }
-function shuffle(a){ const b=[...a]; for(let i=b.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [b[i],b[j]]=[b[j],b[i]]; } return b; }
+
+/* Mescola le lingue */
+
+function shuffle(a){
+  const b=[...a];
+
+  for(let i=b.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [b[i],b[j]]=[b[j],b[i]];
+  }
+
+  return b;
+}
+
+/*
+  NUOVO SISTEMA DI RIEMPIMENTO
+
+  Invece di mettere le parole in posizioni casuali,
+  il cuore viene riempito con righe orizzontali.
+
+  Ogni riga è centrata e le parole sono distribuite
+  con spazi regolari.
+
+  Il risultato è più pieno, ordinato e leggibile.
+*/
 
 function buildHeart(){
-  DPR = Math.min(devicePixelRatio || 1, 2);
-  W = innerWidth; H = innerHeight;
-  cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
-  R = Math.min(W*0.40, H*0.36);          // metà larghezza del cuore
-  heartCx = W/2; heartCy = H/2;
-  const fs = Math.max(9, R/17); fs_ = fs;  // grandezza del testo
-  ctx.font = `700 ${fs}px "JetBrains Mono", monospace`;
-  const names = shuffle(CONFIG.lingue); let li = 0;
-  const next = () => names[li++ % names.length];
 
-  /* 1) campiono il contorno e misuro la sua lunghezza */
-  const N = 900, pts = [], cum = [0];
+  DPR = Math.min(devicePixelRatio || 1,2);
+
+  W = innerWidth;
+  H = innerHeight;
+
+  cv.width = W*DPR;
+  cv.height = H*DPR;
+
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+
+  heartCx = W/2;
+  heartCy = H/2;
+
+  /*
+    Cuore più grande:
+    su desktop sfrutta quasi tutta la larghezza,
+    su telefono mantiene un'altezza adeguata.
+  */
+
+  R = Math.min(W*0.47,H*0.43);
+
+  /*
+    Testo leggermente più piccolo:
+    così entrano molte più scritte.
+  */
+
+  fs_ = Math.max(8,Math.min(15,R/23));
+
+  ctx.font = `700 ${fs_}px "JetBrains Mono", monospace`;
+
+  const names = shuffle(CONFIG.lingue);
+  let li = 0;
+
+  function next(){
+    const word = names[li % names.length];
+    li++;
+    return word;
+  }
+
+  /* Creo il poligono del cuore */
+
+  const N = 1200;
+  const pts = [];
+
   for(let i=0;i<=N;i++){
-    const p = heartPoint(i/N*Math.PI*2); pts.push(p);
-    if(i) cum.push(cum[i-1] + Math.hypot(p.x-pts[i-1].x, p.y-pts[i-1].y));
+    pts.push(heartPoint(i/N*Math.PI*2));
   }
-  const L = cum[N];
 
-  /* 2) scelgo quante frasi entrano nel perimetro e le distribuisco a distanza uguale */
-  const ring = []; let sum = 0;
-  while(true){
-    const t = next(), w = ctx.measureText(t).width;
-    if(sum + w + fs*0.7*(ring.length+1) > L){ li--; break; }
-    ring.push({t, w}); sum += w;
-  }
-  const gapR = (L - sum)/ring.length;
-  let s = gapR/2, j = 1; items = [];
-  ring.forEach((r, idx) => {
-    const c = s + r.w/2;
-    while(j < N && cum[j] < c) j++;
-    const a = pts[Math.max(0,j-6)], b = pts[Math.min(N,j+6)];       // tangente alla curva
-    let ang = Math.atan2(b.y-a.y, b.x-a.x);
-    if(ang > Math.PI/2 || ang < -Math.PI/2) ang += Math.PI;         // testo mai capovolto
-    // le frasi del contorno appaiono una dopo l'altra, partendo dall'alto al centro
-    items.push({x: pts[j].x, y: pts[j].y, t: r.t, ang, ring: true, d: 300 + idx*140, ph: Math.random()*6.28, big: false});
-    s += r.w + gapR;
-  });
-  const ringEnd = 300 + ring.length*140;
+  items=[];
 
-  /* 3) riempio l'interno (un po' rimpicciolito, per non toccare il contorno) */
-  const inset = 0.86;
-  const inside = (px, py) => insidePoly(heartCx + (px-heartCx)/inset, heartCy + (py-heartCy)/inset, pts);
-  const rh = fs*1.35;
-  for(let y = heartCy - R*1.2; y < heartCy + R*1.2; y += rh){
-    let x = heartCx - R*1.1 - Math.random()*fs*3;
-    while(x < heartCx + R*1.1){
-      const t = next(), w = ctx.measureText(t).width + fs*0.9, cxp = x + w/2; x += w;
-      if(inside(cxp, y) && inside(cxp - w/2, y) && inside(cxp + w/2 - fs*0.9, y)){
-        const dist = Math.hypot(cxp-heartCx, y-heartCy)/R;
-        // l'interno parte dopo il contorno: prima le frasi vicine al bordo, poi verso il centro
-        items.push({x: cxp, y, t, ang: 0, ring: false,
-          d: ringEnd + 500 + (1 - Math.min(1, dist/1.1))*2600 + Math.random()*1500,
-          ph: Math.random()*6.28, big: Math.random() < .1});
+  /*
+    Altezza di ogni riga.
+    Più è piccolo il valore, più righe e scritte entrano.
+  */
+
+  const rowHeight = fs_*1.48;
+
+  /*
+    Parto dall'alto e scendo progressivamente.
+    Ogni riga viene riempita solo dove c'è il cuore.
+  */
+
+  let row = 0;
+
+  for(
+    let y=heartCy-R*1.03;
+    y<=heartCy+R*1.03;
+    y+=rowHeight
+  ){
+
+    /*
+      Trovo il margine sinistro e destro della riga.
+      Il campionamento serve a seguire precisamente
+      la forma del cuore.
+    */
+
+    let left=null;
+    let right=null;
+
+    const step=2;
+
+    for(let x=heartCx-R*1.08;x<=heartCx+R*1.08;x+=step){
+
+      if(insidePoly(x,y,pts)){
+        if(left===null) left=x;
+        right=x;
       }
     }
+
+    if(left===null || right===null) continue;
+
+    /*
+      Margine interno per non far toccare le parole
+      al bordo del cuore.
+    */
+
+    const margin=fs_*0.9;
+
+    left+=margin;
+    right-=margin;
+
+    const available=right-left;
+
+    if(available<fs_*3) continue;
+
+    /*
+      Preparo le parole della riga.
+      Le parole vengono ripetute quando necessario,
+      così il cuore risulta molto più pieno.
+    */
+
+    const words=[];
+    let totalWidth=0;
+
+    while(totalWidth<available){
+
+      const word=next();
+      const width=ctx.measureText(word).width;
+      const gap=fs_*0.85;
+
+      words.push({
+        text:word,
+        width:width,
+        gap:gap
+      });
+
+      totalWidth+=width+gap;
+    }
+
+    /*
+      Calcolo la larghezza esatta e centro la riga.
+      Tutte le righe restano orizzontali e regolari.
+    */
+
+    const excess=totalWidth-available;
+    let x=left-excess/2;
+
+    const rowDelay=row*95;
+
+    for(const word of words){
+
+      const center=x+word.width/2;
+
+      items.push({
+        x:center,
+        y:y,
+        t:word.text,
+        d:350+rowDelay,
+        ph:Math.random()*6.28,
+        row:row
+      });
+
+      x+=word.width+word.gap;
+    }
+
+    row++;
   }
+
+  /*
+    Le righe vengono mostrate dall'alto verso il basso.
+    Il cuore si costruisce in modo lineare.
+  */
 }
+
+/* ---------- ANIMAZIONE DEL CUORE ---------- */
 
 function draw(t){
-  raf = requestAnimationFrame(draw);
-  const el = t - startT;
+
+  raf=requestAnimationFrame(draw);
+
+  const el=t-startT;
+
   ctx.clearRect(0,0,W,H);
-  const beat = 1 + 0.022*Math.sin(el/210) + 0.012*Math.sin(el/105);   // battito
-  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  let done = 0, maxD = 0;
+
+  /*
+    Battito leggero e naturale.
+  */
+
+  const beat=
+    1
+    +0.018*Math.sin(el/210)
+    +0.009*Math.sin(el/105);
+
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+
+  let done=0;
+  let maxD=0;
+
   for(const i of items){
-    if(i.d > maxD) maxD = i.d;
-    const age = el - i.d;
-    if(age < 0) continue;
+
+    if(i.d>maxD) maxD=i.d;
+
+    const age=el-i.d;
+
+    if(age<0) continue;
+
     done++;
-    const a = Math.min(1, age/700);
-    const tw = 0.62 + 0.38*Math.sin(el/600 + i.ph);
-    const x = heartCx + (i.x - heartCx)*beat, y = heartCy + (i.y - heartCy)*beat;
+
+    const a=Math.min(1,age/450);
+
+    const tw=0.75+0.25*Math.sin(el/550+i.ph);
+
+    const x=heartCx+(i.x-heartCx)*beat;
+    const y=heartCy+(i.y-heartCy)*beat;
+
     ctx.save();
-    if(i.ring){
-      // contorno: più luminoso, con piccolo "pop" quando compare
-      const sc = 1 + (1-a)*0.6;
-      ctx.translate(x, y); ctx.rotate(i.ang); ctx.scale(sc, sc);
-      ctx.globalAlpha = a*(0.85 + 0.15*tw);
-      ctx.fillStyle = '#ff4d6d'; ctx.shadowColor = 'rgba(255,60,100,.9)'; ctx.shadowBlur = 12;
-      ctx.font = `700 ${fs_*1.12}px "JetBrains Mono", monospace`;
-      ctx.fillText(i.t, 0, 0);
-    } else {
-      ctx.translate(x + (1-a)*(Math.random()-.5)*8, y);
-      ctx.globalAlpha = a*(0.5 + 0.5*tw);
-      ctx.fillStyle = i.big ? '#ff5c7a' : '#ff1f4b';
-      ctx.shadowColor = 'rgba(255,30,75,.7)'; ctx.shadowBlur = i.big ? 10 : 4;
-      ctx.font = `${i.big?700:500} ${fs_*(i.big?1.08:1)}px "JetBrains Mono", monospace`;
-      ctx.fillText(i.t, 0, 0);
-    }
+
+    ctx.translate(x,y);
+
+    /*
+      Piccolo effetto di comparsa.
+    */
+
+    const scale=0.92+(1-a)*0.08;
+    ctx.scale(scale,scale);
+
+    ctx.globalAlpha=a*(0.78+0.22*tw);
+
+    /*
+      Colore rosa luminoso.
+      Alterno due tonalità per dare profondità.
+    */
+
+    ctx.fillStyle =
+      i.row%3===0 ? '#ff6685' : '#ff2d55';
+
+    ctx.shadowColor='rgba(255,30,75,.75)';
+    ctx.shadowBlur=5;
+
+    ctx.font=`700 ${fs_}px "JetBrains Mono", monospace`;
+
+    ctx.fillText(i.t,0,0);
+
     ctx.restore();
   }
-  if(!fillDone && items.length && done === items.length && el > maxD + 900){
-    fillDone = true; onFilled();
+
+  /*
+    Quando tutte le scritte sono apparse,
+    parte il cursore.
+  */
+
+  if(
+    !fillDone &&
+    items.length &&
+    done===items.length &&
+    el>maxD+700
+  ){
+    fillDone=true;
+    onFilled();
   }
 }
-function startHeart(){
-  buildHeart(); fillDone = false; startT = performance.now();
-  cancelAnimationFrame(raf); raf = requestAnimationFrame(draw);
-}
-addEventListener('resize', () => { if(state==='heart'||state==='cursor'){ const old = startT; buildHeart(); startT = old - 20000; } });
 
-/* ---------- cursore finto che clicca ---------- */
-const cur = $('#cur');
+function startHeart(){
+
+  buildHeart();
+
+  fillDone=false;
+  startT=performance.now();
+
+  cancelAnimationFrame(raf);
+
+  raf=requestAnimationFrame(draw);
+}
+
+/*
+  Se cambia la dimensione dello schermo,
+  ricostruisco il cuore.
+*/
+
+addEventListener('resize',()=>{
+  if(state==='heart'||state==='cursor'){
+    const old=startT;
+    buildHeart();
+    startT=old-20000;
+  }
+});
+
+/* ---------- CURSORE CHE CLICCA ---------- */
+
+const cur=$('#cur');
+
 function moveCursor(x0,y0,x1,y1,dur){
-  return new Promise(res => {
-    const cx = (x0+x1)/2 + (y1-y0)*0.25, cy = (y0+y1)/2 - (x1-x0)*0.2; // curva morbida
-    const t0 = performance.now();
+
+  return new Promise(res=>{
+
+    const cx=(x0+x1)/2+(y1-y0)*0.25;
+    const cy=(y0+y1)/2-(x1-x0)*0.2;
+
+    const t0=performance.now();
+
     (function f(now){
-      let p = Math.min(1, (now-t0)/dur); const e = p<.5 ? 2*p*p : 1-Math.pow(-2*p+2,2)/2;
-      const x = (1-e)*(1-e)*x0 + 2*(1-e)*e*cx + e*e*x1, y = (1-e)*(1-e)*y0 + 2*(1-e)*e*cy + e*e*y1;
-      cur.style.transform = `translate(${x}px,${y}px)`;
-      p < 1 ? requestAnimationFrame(f) : res();
+
+      let p=Math.min(1,(now-t0)/dur);
+
+      const e=p<.5
+        ? 2*p*p
+        : 1-Math.pow(-2*p+2,2)/2;
+
+      const x=
+        (1-e)*(1-e)*x0+
+        2*(1-e)*e*cx+
+        e*e*x1;
+
+      const y=
+        (1-e)*(1-e)*y0+
+        2*(1-e)*e*cy+
+        e*e*y1;
+
+      cur.style.transform=`translate(${x}px,${y}px)`;
+
+      p<1 ? requestAnimationFrame(f) : res();
+
     })(performance.now());
   });
 }
+
 async function onFilled(){
-  state = 'cursor';
+
+  state='cursor';
+
   await sleep(500);
-  const sx = W*0.85, sy = H*0.88;
-  cur.style.transform = `translate(${sx}px,${sy}px)`; cur.style.opacity = 1;
-  await moveCursor(sx, sy, heartCx - 4, heartCy - R*0.1, reduce ? 10 : 1900);
+
+  const sx=W*0.85;
+  const sy=H*0.88;
+
+  cur.style.transform=`translate(${sx}px,${sy}px)`;
+  cur.style.opacity=1;
+
+  await moveCursor(
+    sx,
+    sy,
+    heartCx-4,
+    heartCy-R*0.1,
+    reduce ? 10 : 1900
+  );
+
   await sleep(450);
+
   clickHeart();
 }
+
 async function clickHeart(){
-  if(state !== 'cursor') return; state = 'reveal';
+
+  if(state!=='cursor') return;
+
+  state='reveal';
+
   cur.classList.add('press');
-  const r = document.createElement('div'); r.className = 'rip';
-  r.style.left = heartCx+'px'; r.style.top = (heartCy - R*0.1)+'px'; $('#app').append(r);
-  await sleep(160); cur.classList.remove('press');
+
+  const r=document.createElement('div');
+  r.className='rip';
+
+  r.style.left=heartCx+'px';
+  r.style.top=(heartCy-R*0.1)+'px';
+
+  $('#app').append(r);
+
+  await sleep(160);
+
+  cur.classList.remove('press');
+
   cv.classList.add('dim');
-  await sleep(600); cur.style.opacity = 0;
+
+  await sleep(600);
+
+  cur.style.opacity=0;
+
   showStage();
 }
-cv.addEventListener('click', clickHeart);
-cv.addEventListener('touchend', clickHeart, {passive:true});
 
-/* ---------- foto a rotazione ---------- */
-let userPhotos = [], slideIdx = 0, slideTimer;
-const PLACE = ['linear-gradient(135deg,#ff2d55,#8a1c47)','linear-gradient(135deg,#ff8a5c,#c2284a)','linear-gradient(135deg,#a64dff,#ff2d55)','linear-gradient(135deg,#ff5c9a,#5b1a4a)'];
-function buildPhotos(){
-  const box = $('#photos'); box.querySelectorAll('.ph').forEach(n => n.remove());
-  const src = [...CONFIG.foto, ...userPhotos];
-  const n = src.length || PLACE.length;
-  const dots = $('#dots'); dots.innerHTML = '';
-  for(let i=0;i<n;i++){
-    const d = document.createElement('div'); d.className = 'ph';
-    d.style.setProperty('--r', ((i%2?1:-1)*(1+Math.random()*2.2)).toFixed(1)+'deg');
-    const im = document.createElement('div'); im.className = 'im';
-    if(src.length){ im.style.backgroundImage = `url("${src[i]}")`; }
-    else { im.style.background = PLACE[i]; im.textContent = 'La vostra foto qui ♥'; }
-    d.append(im);
-    const cap = CONFIG.didascalie[i]; if(cap){ const c = document.createElement('div'); c.className='cap'; c.textContent = cap; d.append(c); }
-    box.insertBefore(d, dots);
-    const dot = document.createElement('i'); dots.append(dot);
+cv.addEventListener('click',clickHeart);
+
+cv.addEventListener('touchend',e=>{
+  if(state==='cursor'){
+    e.preventDefault();
+    clickHeart();
   }
-  slideIdx = 0; show(0);
+},{passive:false});
+
+/* ---------- FOTO A ROTAZIONE ---------- */
+
+let userPhotos=[];
+let slideIdx=0;
+let slideTimer;
+
+const PLACE=[
+  'linear-gradient(135deg,#ff2d55,#8a1c47)',
+  'linear-gradient(135deg,#ff8a5c,#c2284a)',
+  'linear-gradient(135deg,#a64dff,#ff2d55)',
+  'linear-gradient(135deg,#ff5c9a,#5b1a4a)'
+];
+
+function buildPhotos(){
+
+  const box=$('#photos');
+
+  box.querySelectorAll('.ph').forEach(n=>n.remove());
+
+  const src=[...CONFIG.foto,...userPhotos];
+
+  const n=src.length||PLACE.length;
+
+  const dots=$('#dots');
+  dots.innerHTML='';
+
+  for(let i=0;i<n;i++){
+
+    const d=document.createElement('div');
+    d.className='ph';
+
+    d.style.setProperty(
+      '--r',
+      ((i%2?1:-1)*(1+Math.random()*2.2)).toFixed(1)+'deg'
+    );
+
+    const im=document.createElement('div');
+    im.className='im';
+
+    if(src.length){
+      im.style.backgroundImage=`url("${src[i]}")`;
+    }else{
+      im.style.background=PLACE[i%PLACE.length];
+      im.textContent='La vostra foto qui ♥';
+    }
+
+    d.append(im);
+
+    const cap=CONFIG.didascalie[i];
+
+    if(cap){
+      const c=document.createElement('div');
+      c.className='cap';
+      c.textContent=cap;
+      d.append(c);
+    }
+
+    box.insertBefore(d,dots);
+
+    const dot=document.createElement('i');
+    dots.append(dot);
+  }
+
+  slideIdx=0;
+
+  show(0);
+
   clearInterval(slideTimer);
-  if(n > 1) slideTimer = setInterval(() => show((slideIdx+1) % n), 3800);
-}
-function show(i){
-  slideIdx = i;
-  document.querySelectorAll('.ph').forEach((p,k) => p.classList.toggle('act', k===i));
-  document.querySelectorAll('#dots i').forEach((p,k) => p.classList.toggle('on', k===i));
+
+  if(n>1){
+    slideTimer=setInterval(()=>{
+      show((slideIdx+1)%n);
+    },3800);
+  }
 }
 
-/* ---------- lettera, parola per parola ---------- */
-let letterRun = 0;
+function show(i){
+
+  slideIdx=i;
+
+  document.querySelectorAll('.ph').forEach((p,k)=>{
+    p.classList.toggle('act',k===i);
+  });
+
+  document.querySelectorAll('#dots i').forEach((p,k)=>{
+    p.classList.toggle('on',k===i);
+  });
+}
+
+/* ---------- LETTERA ---------- */
+
+let letterRun=0;
+
 async function writeLetter(){
-  const id = ++letterRun, box = $('#letter'); box.innerHTML = '';
-  const to = document.createElement('span'); to.className = 'to'; to.textContent = `Per te, ${CONFIG.nome},`; box.append(to);
-  const paras = (CONFIG.lettera + '\n\n' + CONFIG.firma).split(/\n\n/);
+
+  const id=++letterRun;
+  const box=$('#letter');
+
+  box.innerHTML='';
+
+  const to=document.createElement('span');
+  to.className='to';
+  to.textContent=`Per te, ${CONFIG.nome},`;
+
+  box.append(to);
+
+  const paras=(
+    CONFIG.lettera+'\n\n'+CONFIG.firma
+  ).split(/\n\n/);
+
   await sleep(1200);
+
   for(let p=0;p<paras.length;p++){
-    const para = document.createElement('p'); para.style.marginBottom = '.7em';
-    if(p === paras.length-1) para.style.color = 'var(--rose)';
-    box.append(para);
-    for(const w of paras[p].split(/\s+/)){
-      if(id !== letterRun) return;
-      const s = document.createElement('span'); s.className = 'w'; s.textContent = w + '\u00A0';
-      para.append(s);
-      box.scrollTop = box.scrollHeight;
-      let wait = CONFIG.velocitaParola;
-      if(/[.!?]$/.test(w)) wait += 450; else if(/[,;:]$/.test(w)) wait += 200;
-      await sleep(reduce ? 20 : wait);
+
+    const para=document.createElement('p');
+
+    para.style.marginBottom='.7em';
+
+    if(p===paras.length-1){
+      para.style.color='var(--rose)';
     }
+
+    box.append(para);
+
+    for(const w of paras[p].split(/\s+/)){
+
+      if(id!==letterRun) return;
+
+      const s=document.createElement('span');
+
+      s.className='w';
+      s.textContent=w+'\u00A0';
+
+      para.append(s);
+
+      box.scrollTop=box.scrollHeight;
+
+      let wait=CONFIG.velocitaParola;
+
+      if(/[.!?]$/.test(w)){
+        wait+=450;
+      }else if(/[,;:]$/.test(w)){
+        wait+=200;
+      }
+
+      await sleep(reduce?20:wait);
+    }
+
     await sleep(500);
   }
+
   $('#replay').classList.add('show');
 }
+
 function showStage(){
-  state = 'stage';
+
+  state='stage';
+
   buildPhotos();
+
   $('#stage').classList.add('on');
+
   writeLetter();
 }
 
-/* ---------- controlli ---------- */
-$('#btn').addEventListener('click', () => {
-  state = 'heart'; $('#intro').classList.add('gone'); startHeart();
-});
-$('#addph').addEventListener('click', () => $('#file').click());
-$('#file').addEventListener('change', e => {
-  userPhotos = [...e.target.files].map(f => URL.createObjectURL(f));
-  const b = $('#addph'); b.textContent = `✓ ${userPhotos.length} foto caricate`;
-});
-$('#replay').addEventListener('click', () => {
-  letterRun++; clearInterval(slideTimer);
-  $('#stage').classList.remove('on'); $('#replay').classList.remove('show');
-  cv.classList.remove('dim'); state = 'heart'; startHeart();
+/* ---------- CONTROLLI ---------- */
+
+$('#btn').addEventListener('click',()=>{
+
+  state='heart';
+
+  $('#intro').classList.add('gone');
+
+  startHeart();
 });
 
+$('#addph').addEventListener('click',()=>{
+  $('#file').click();
+});
+
+$('#file').addEventListener('change',e=>{
+
+  userPhotos=[
+    ...e.target.files
+  ].map(f=>URL.createObjectURL(f));
+
+  const b=$('#addph');
+
+  b.textContent=`✓ ${userPhotos.length} foto caricate`;
+});
+
+$('#replay').addEventListener('click',()=>{
+
+  letterRun++;
+
+  clearInterval(slideTimer);
+
+  $('#stage').classList.remove('on');
+
+  $('#replay').classList.remove('show');
+
+  cv.classList.remove('dim');
+
+  state='heart';
+
+  startHeart();
+});
+
+/* AVVIO */
+
 intro();
+
 </script>
 </body>
 </html>
