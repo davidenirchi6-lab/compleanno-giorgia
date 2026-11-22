@@ -487,8 +487,22 @@ const CONFIG = {
     "you make life beautiful"
   ],
 
-  foto: [],
-  didascalie: [],
+  /* LE TUE 5 FOTO */
+  foto: [
+    "foto/foto1.jpeg",
+    "foto/foto2.jpeg",
+    "foto/foto3.jpeg",
+    "foto/foto4.jpeg",
+    "foto/foto5.jpeg"
+  ],
+
+  didascalie: [
+    "Il mio sorriso preferito ♥",
+    "Un momento tutto nostro",
+    "La mia persona speciale",
+    "Con te è tutto più bello",
+    "Sempre noi ♥"
+  ],
 
   lettera:
 `Ogni giorno con te è la mia parte preferita della vita. Mi hai insegnato che le cose semplici sono quelle che contano di più: una risata a metà serata, una mano da stringere, un "ci sono io".
@@ -508,7 +522,7 @@ const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 let state = 'intro';
 
-/* INTRO IN STILE TERMINALE */
+/* INTRO */
 
 async function typeInto(el,text,speed=28){
 
@@ -532,7 +546,7 @@ async function intro(){
   await typeInto($('#l2'),'[network] Connessione stabilita.');
 
   await sleep(400);
-  await typeInto($('#l3'),'[access] Ricerca pacchetto segreto...');
+  await typeInto($('#l3'),'[access] Ricerca pacchetto segreto: GIORGIA');
 
   await sleep(450);
   await typeInto($('#l4'),'[decrypt] Decodifica messaggio in corso...');
@@ -541,7 +555,7 @@ async function intro(){
   await typeInto($('#l5'),'[status] ACCESSO AUTORIZZATO');
 
   await sleep(400);
-  await typeInto($('#l6'),'> Una lettera speciale ti sta aspettando.');
+  await typeInto($('#l6'),'> Un messaggio speciale ti sta aspettando.');
 
   await sleep(500);
   $('#btn').classList.add('show');
@@ -578,13 +592,7 @@ function shuffle(a){
   return b;
 }
 
-/*
-  CUORE CORRETTO
-
-  Le frasi vengono distribuite su ogni riga.
-  Se una frase non entra, il codice cerca un'altra frase.
-  Quando la lista finisce, ricomincia dall'inizio.
-*/
+/* COSTRUZIONE DEL CUORE */
 
 function buildHeart(){
 
@@ -619,11 +627,6 @@ function buildHeart(){
 
   let rowIndex=0;
 
-  /*
-    Scorriamo il cuore dall'alto verso il basso.
-    Ogni riga viene riempita indipendentemente.
-  */
-
   for(let py=0.98;py>=-0.98;py-=rowHeight/R){
 
     let intervals=[];
@@ -657,51 +660,30 @@ function buildHeart(){
       let row=[];
       let totalWidth=0;
 
-      /*
-        Cerca frasi che entrano nello spazio disponibile.
-        Non consuma le frasi che non entrano.
-      */
+      let attempts=0;
 
-      while(true){
+      while(attempts<phrases.length){
 
-        let selected=null;
+        const phrase=phrases[phraseIndex % phrases.length];
 
-        for(let attempt=0;attempt<phrases.length;attempt++){
+        const phraseWidth=ctx.measureText(phrase).width;
 
-          const phrase=phrases[phraseIndex % phrases.length];
+        const needed=phraseWidth+(row.length>0?gap:0);
 
-          phraseIndex++;
+        phraseIndex++;
+        attempts++;
 
-          const phraseWidth=ctx.measureText(phrase).width;
+        if(totalWidth+needed<=width){
 
-          const needed=phraseWidth+(row.length>0?gap:0);
+          row.push({
+            text:phrase,
+            width:phraseWidth
+          });
 
-          if(totalWidth+needed<=width){
-
-            selected={
-              text:phrase,
-              width:phraseWidth
-            };
-
-            break;
-          }
+          totalWidth+=needed;
+          attempts=0;
         }
-
-        /*
-          Se nessuna frase entra nello spazio rimasto,
-          passa alla riga successiva.
-        */
-
-        if(!selected) break;
-
-        row.push(selected);
-
-        totalWidth+=selected.width+(row.length>1?gap:0);
       }
-
-      /*
-        Centra tutte le frasi all'interno della riga.
-      */
 
       let x=heartCx+interval.left+(width-totalWidth)/2;
 
@@ -710,7 +692,6 @@ function buildHeart(){
         items.push({
 
           x:x+word.width/2,
-
           y:heartCy-py*R,
 
           text:word.text,
@@ -730,10 +711,6 @@ function buildHeart(){
 
     rowIndex++;
   }
-
-  /*
-    La scritta centrale appare dopo le frasi del cuore.
-  */
 
   let lastDelay=0;
 
@@ -758,8 +735,6 @@ function buildHeart(){
   });
 
 }
-
-/* DISEGNO E ANIMAZIONE */
 
 function draw(t){
 
@@ -832,7 +807,6 @@ function draw(t){
   ){
 
     fillDone=true;
-
     onFilled();
   }
 }
@@ -842,7 +816,6 @@ function startHeart(){
   buildHeart();
 
   fillDone=false;
-
   startT=performance.now();
 
   cancelAnimationFrame(raf);
@@ -987,7 +960,6 @@ function buildPhotos(){
   const n=src.length||PLACE.length;
 
   const dots=$('#dots');
-
   dots.innerHTML='';
 
   for(let i=0;i<n;i++){
@@ -1034,13 +1006,11 @@ function buildPhotos(){
   }
 
   slideIdx=0;
-
   show(0);
 
   clearInterval(slideTimer);
 
   if(n>1){
-
     slideTimer=setInterval(
       ()=>show((slideIdx+1)%n),
       3800
@@ -1068,7 +1038,6 @@ let letterRun=0;
 async function writeLetter(){
 
   const id=++letterRun;
-
   const box=$('#letter');
 
   box.innerHTML='';
@@ -1076,7 +1045,6 @@ async function writeLetter(){
   const to=document.createElement('span');
 
   to.className='to';
-
   to.textContent=`Per te, ${CONFIG.nome},`;
 
   box.append(to);
@@ -1106,7 +1074,6 @@ async function writeLetter(){
       const s=document.createElement('span');
 
       s.className='w';
-
       s.textContent=w+'\u00A0';
 
       para.append(s);
@@ -1159,7 +1126,6 @@ $('#replay').addEventListener('click',()=>{
   clearInterval(slideTimer);
 
   $('#stage').classList.remove('on');
-
   $('#replay').classList.remove('show');
 
   cv.classList.remove('dim');
